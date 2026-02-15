@@ -1,0 +1,277 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Requests.EditModel
+@{
+    ViewData["Title"] = "Edit Request";
+}
+
+<h1>Edit Request</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Request.Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-2">
+        <label asp-for="Request.RequestorId" class="form-label">Requestor</label>
+        <select asp-for="Request.RequestorId" class="form-select" asp-items="Model.RequestorList"></select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.RequestName" class="form-label">Request Name</label>
+        <input asp-for="Request.RequestName" class="form-control" placeholder="Client/Requestor name" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.NumberOfIndividuals" class="form-label">Number of Individuals</label>
+        <input asp-for="Request.NumberOfIndividuals" class="form-control" type="number" min="1" max="99" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Individual Type</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf" id="individual-deaf" />
+                <label class="form-check-label" for="individual-deaf">Deaf</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deafblind" id="individual-deafblind" />
+                <label class="form-check-label" for="individual-deafblind">Deaf-Blind</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
+                <label class="form-check-label" for="individual-deaf_deafblind_hh">Deaf/DeafBlind/Hard of Hearing</label>
+            </div>
+        </div>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.TypeOfService" class="form-label">Type of Service</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Medical" id="type-medical" />
+                <label class="form-check-label" for="type-medical">Medical</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Legal" id="type-legal" />
+                <label class="form-check-label" for="type-legal">Legal</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Educational" id="type-educational" />
+                <label class="form-check-label" for="type-educational">Educational</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Government" id="type-government" />
+                <label class="form-check-label" for="type-government">Government</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Other" id="type-other" />
+                <label class="form-check-label" for="type-other">Other</label>
+            </div>
+        </div>
+        <div class="mb-2" id="other-specify-wrap" style="display: none;">
+            <label asp-for="Request.TypeOfServiceOther" class="form-label">Other (Please specify)</label>
+            <input asp-for="Request.TypeOfServiceOther" class="form-control" placeholder="Specify type of appointment" />
+        </div>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.PreferredInterpreterName" class="form-label">Preferred Interpreter</label>
+        <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Mode of Interpretation</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.Mode" value="In-Person" id="mode-inperson" />
+                <label class="form-check-label" for="mode-inperson">In-Person</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.Mode" value="Virtual" id="mode-virtual" />
+                <label class="form-check-label" for="mode-virtual">Virtual</label>
+            </div>
+        </div>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.ServiceDateTime" class="form-label">Date and Time of Service</label>
+        <input asp-for="Request.ServiceDateTime" class="form-control" type="datetime-local" required />
+        <span asp-validation-for="Request.ServiceDateTime" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.EndDateTime" class="form-label">End Date and Time</label>
+        <input asp-for="Request.EndDateTime" class="form-control" type="datetime-local" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.Location" class="form-label">Location</label>
+        <select asp-for="Request.Location" id="location-select" class="form-select">
+            <option value="In-Person">In-Person</option>
+            <option value="Virtual">Virtual</option>
+        </select>
+    </div>
+    <div class="mb-2" id="meeting-link-section" style="display: none;">
+        <label asp-for="Request.MeetingLink" class="form-label">Meeting Information</label>
+        <textarea asp-for="Request.MeetingLink" class="form-control" rows="5" placeholder="Meeting link: https://...&#10;Passcode: 123456&#10;Phone: +1 (555) 123-4567&#10;Meeting ID: 123 456 7890&#10;Other information..."></textarea>
+        <small class="form-text text-muted">You can include meeting link, passcode, phone number, meeting ID, and any other relevant details.</small>
+    </div>
+    <fieldset class="mb-4" id="inperson-location-section">
+        <legend class="h6 mb-2">In-Person Location</legend>
+        <div class="mb-2">
+            <label asp-for="Request.Address" class="form-label">Address</label>
+            <input asp-for="Request.Address" class="form-control" placeholder="Street address" />
+        </div>
+        <div class="mb-2">
+            <label asp-for="Request.Address2" class="form-label">Address 2</label>
+            <input asp-for="Request.Address2" class="form-control" placeholder="Apartment, suite, floor, etc." />
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                <label asp-for="Request.City" class="form-label">City</label>
+                <input asp-for="Request.City" class="form-control" placeholder="City" />
+            </div>
+            <div class="col-md-3 mb-2">
+                <label asp-for="Request.State" class="form-label">State</label>
+                <select asp-for="Request.State" class="form-select" asp-items="Model.StateList">
+                    <option value="">-- Select State --</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <label asp-for="Request.ZipCode" class="form-label">ZIP Code</label>
+                <input asp-for="Request.ZipCode" class="form-control" placeholder="ZIP code" />
+            </div>
+        </div>
+    </fieldset>
+    <div class="mb-2">
+        <label class="form-label">Gender Preference</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="male" id="gender-male" />
+                <label class="form-check-label" for="gender-male">Male</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="female" id="gender-female" />
+                <label class="form-check-label" for="gender-female">Female</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="none" id="gender-none" />
+                <label class="form-check-label" for="gender-none">No Preference</label>
+            </div>
+        </div>
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Specializations</label>
+        <div>
+            @{
+                var specializations = Model.Request?.Specializations?.Split(", ", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            }
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="ASL" id="spec-asl" @(specializations.Contains("ASL") ? "checked" : "") />
+                <label class="form-check-label" for="spec-asl">ASL (American Sign Language)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="CDI" id="spec-cdi" @(specializations.Contains("CDI") ? "checked" : "") />
+                <label class="form-check-label" for="spec-cdi">CDI (Certified Deaf Interpreter)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Russian" id="spec-russian" @(specializations.Contains("Russian") ? "checked" : "") />
+                <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Universe" id="spec-universe" @(specializations.Contains("Universe") ? "checked" : "") />
+                <label class="form-check-label" for="spec-universe">Universe (if applicable)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile" id="spec-tactile" @(specializations.Contains("Tactile") ? "checked" : "") />
+                <label class="form-check-label" for="spec-tactile">Tactile</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Closed up" id="spec-closed_up" @(specializations.Contains("Closed up") ? "checked" : "") />
+                <label class="form-check-label" for="spec-closed_up">Closed up</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Low vision" id="spec-low_vision" @(specializations.Contains("Low vision") ? "checked" : "") />
+                <label class="form-check-label" for="spec-low_vision">Low vision</label>
+            </div>
+        </div>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.AdditionalNotes" class="form-label">Additional Notes</label>
+        <textarea asp-for="Request.AdditionalNotes" class="form-control" rows="3"></textarea>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Request.Status" class="form-label"></label>
+        <select asp-for="Request.Status" class="form-select">
+            <option value="Pending">Pending</option>
+            <option value="Assigned">Assigned</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            var form = $("form");
+            var locationSelect = $("#location-select");
+            var meetingLinkSection = $("#meeting-link-section");
+            var inpersonLocationSection = $("#inperson-location-section");
+            var modeInPerson = $("#mode-inperson");
+            var modeVirtual = $("#mode-virtual");
+            var typeOther = $("#type-other");
+            var otherWrap = $("#other-specify-wrap");
+
+            // Toggle meeting link section based on location
+            function toggleMeetingLink() {
+                var isVirtual = locationSelect.val() === "Virtual";
+                meetingLinkSection.toggle(isVirtual);
+            }
+
+            // Toggle virtual/in-person sections based on Mode
+            function toggleMode() {
+                var isVirtual = modeVirtual.is(":checked");
+                meetingLinkSection.toggle(isVirtual);
+                inpersonLocationSection.toggle(!isVirtual);
+                // Update Location dropdown to match Mode
+                if (isVirtual) {
+                    locationSelect.val("Virtual");
+                } else {
+                    locationSelect.val("In-Person");
+                }
+                toggleMeetingLink();
+            }
+
+            // Toggle "Other" type of service field
+            function toggleOtherService() {
+                otherWrap.toggle(typeOther.is(":checked"));
+            }
+
+            // Initialize on page load
+            toggleMeetingLink();
+            toggleMode();
+            toggleOtherService();
+
+            // Update when location changes
+            locationSelect.on("change", toggleMeetingLink);
+            
+            // Update when mode changes
+            modeInPerson.on("change", toggleMode);
+            modeVirtual.on("change", toggleMode);
+            
+            // Update when type of service changes
+            $("input[name='Request.TypeOfService']").on("change", toggleOtherService);
+
+            // Ensure unobtrusive validation is initialized for the form
+            $.validator.unobtrusive.parse(form);
+
+            // Validate only on submit; don't clear validator state or classes
+            form.on("submit", function (e) {
+                if (!form.valid()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // When user changes a field, re-validate that field to update its message
+            form.find("input, select, textarea").on("input change", function () {
+                var field = $(this);
+                // Trigger validation for the specific field without wiping global validator state
+                field.valid();
+            });
+        });
+    </script>
+}

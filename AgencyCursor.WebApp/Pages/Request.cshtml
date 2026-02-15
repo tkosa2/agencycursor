@@ -1,0 +1,528 @@
+@page
+@model AgencyCursor.Pages.RequestModel
+@{
+    ViewData["Title"] = "Request an Interpreter";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="mb-3">Request an Interpreter</h1>
+            <p class="lead mb-4">Submit your request for a qualified sign language or DeafBlind interpreter. We will respond as soon as possible.</p>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form method="post" class="needs-validation" novalidate>
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <!-- 1. Requestor Information -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">1. Requestor Information</legend>
+                    <div class="mb-3">
+                        <label asp-for="Request.RequestName" class="form-label">
+                            Request Name <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Request.RequestName" id="request-name" class="form-control" placeholder="Client/Requestor name" required />
+                        <span asp-validation-for="Request.RequestName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Request.NumberOfIndividuals" class="form-label">
+                            Number of Deaf/Hard-of-Hearing or Deaf-Blind Individuals <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Request.NumberOfIndividuals" class="form-control" type="number" min="1" max="99" value="1" required />
+                        <span asp-validation-for="Request.NumberOfIndividuals" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <p class="mb-2">Please specify if the individual is Deaf or Deaf-Blind:</p>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf" id="individual-deaf" checked />
+                            <label class="form-check-label" for="individual-deaf">Deaf</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deafblind" id="individual-deafblind" />
+                            <label class="form-check-label" for="individual-deafblind">Deaf-Blind</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
+                            <label class="form-check-label" for="individual-deaf_deafblind_hh">Deaf/DeafBlind/Hard of Hearing</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 2. Contact Information -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">2. Contact Information</legend>
+                    <div class="mb-3">
+                        <label asp-for="RequestorPhone" class="form-label">
+                            Phone Number <span class="text-muted">(for urgent communication, such as delays)</span> <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="RequestorPhone" class="form-control" type="tel" required />
+                        <span asp-validation-for="RequestorPhone" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="RequestorEmail" class="form-label">
+                            Email Address <span class="text-muted">(for confirmation/updates)</span> <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="RequestorEmail" class="form-control" type="email" required />
+                        <span asp-validation-for="RequestorEmail" class="text-danger"></span>
+                    </div>
+                </fieldset>
+
+                <!-- 3. Appointment Details -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">3. Appointment Details</legend>
+                    <div class="mb-3">
+                        <label asp-for="AppointmentDate" class="form-label">
+                            Date of Appointment <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="AppointmentDate" class="form-control" type="date" required />
+                        <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StartTime" class="form-label">
+                                Start Time <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="StartTime" class="form-control" type="time" required />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EndTime" class="form-label">
+                                End Time <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="EndTime" class="form-control" type="time" required />
+                            <span asp-validation-for="EndTime" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 4. Type of Appointment -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">4. Type of Appointment</legend>
+                    <p class="mb-2">Please select one:</p>
+                    <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Medical" id="type-medical" />
+                            <label class="form-check-label" for="type-medical">Medical</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Legal" id="type-legal" />
+                            <label class="form-check-label" for="type-legal">Legal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Educational" id="type-educational" />
+                            <label class="form-check-label" for="type-educational">Educational</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.TypeOfService" value="Other" id="type-other" />
+                            <label class="form-check-label" for="type-other">Other</label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="other-specify-wrap" style="display:none;">
+                        <label asp-for="Request.TypeOfServiceOther" class="form-label">Other (Please specify)</label>
+                        <input asp-for="Request.TypeOfServiceOther" class="form-control" placeholder="Specify type of appointment" />
+                    </div>
+                </fieldset>
+
+                <!-- 5. Mode of Interpretation -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">5. Mode of Interpretation</legend>
+                    <p class="mb-2">Please select one:</p>
+                    <div class="mb-3">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.Mode" value="In-Person" id="mode-inperson" checked />
+                            <label class="form-check-label" for="mode-inperson">In-Person</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Request.Mode" value="Virtual" id="mode-virtual" />
+                            <label class="form-check-label" for="mode-virtual">Virtual (Please provide the link below)</label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 6. Virtual Appointment Link -->
+                <fieldset class="mb-4" id="virtual-link-section" style="display:none;">
+                    <legend class="h5 mb-3">6. Virtual Appointment Information</legend>
+                    <p class="text-muted mb-3">If virtual, provide meeting details including link, passcode, phone number, meeting ID, and any other relevant information.</p>
+                    <div class="mb-3">
+                        <label asp-for="Request.MeetingLink" class="form-label">Meeting Information</label>
+                        <textarea asp-for="Request.MeetingLink" class="form-control" rows="5" placeholder="Meeting link: https://...&#10;Passcode: 123456&#10;Phone: +1 (555) 123-4567&#10;Meeting ID: 123 456 7890&#10;Other information..."></textarea>
+                        <small class="form-text text-muted">You can include meeting link, passcode, phone number, meeting ID, and any other relevant details.</small>
+                    </div>
+                </fieldset>
+
+                <!-- 7. In-Person Appointment Location -->
+                <fieldset class="mb-4" id="inperson-location-section">
+                    <legend class="h5 mb-3">7. In-Person Appointment Location</legend>
+                    <p class="text-muted mb-3">Please include floor/suite if applicable.</p>
+                    <div class="mb-3">
+                        <label asp-for="Request.Address" class="form-label">
+                            Address <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Request.Address" class="form-control" placeholder="Street address" required />
+                        <span asp-validation-for="Request.Address" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Request.Address2" class="form-label">Address 2</label>
+                        <input asp-for="Request.Address2" class="form-control" placeholder="Apartment, suite, floor, etc." />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Request.City" class="form-label">
+                                City <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Request.City" class="form-control" placeholder="City" required />
+                            <span asp-validation-for="Request.City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Request.State" class="form-label">
+                                State <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Request.State" class="form-select" asp-items="Model.StateList" required>
+                                <option value="">-- Select State --</option>
+                            </select>
+                            <span asp-validation-for="Request.State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Request.ZipCode" class="form-label">
+                                ZIP Code <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Request.ZipCode" class="form-control" placeholder="ZIP code" pattern="[0-9]{5}(-[0-9]{4})?" title="5-digit ZIP code or ZIP+4" required />
+                            <span asp-validation-for="Request.ZipCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 8. Interpreter Preferences -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">8. Interpreter Preferences</legend>
+                    <div class="mb-3">
+                        <label class="form-label">Gender Preference</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="male" id="gender-male" />
+                                <label class="form-check-label" for="gender-male">Male</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="female" id="gender-female" />
+                                <label class="form-check-label" for="gender-female">Female</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Request.GenderPreference" value="none" id="gender-none" checked />
+                                <label class="form-check-label" for="gender-none">No Preference</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Request.PreferredInterpreterName" class="form-label">
+                            Preferred Interpreter <span class="text-muted">(optional)</span>
+                        </label>
+                        <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Specialization</label>
+                        <p class="text-muted mb-2">Please select any that apply:</p>
+                        <div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="ASL" id="spec-asl" />
+                                <label class="form-check-label" for="spec-asl">ASL (American Sign Language)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="CDI" id="spec-cdi" />
+                                <label class="form-check-label" for="spec-cdi">CDI (Certified Deaf Interpreter)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Russian" id="spec-russian" />
+                                <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile" id="spec-tactile" />
+                                <label class="form-check-label" for="spec-tactile">Tactile</label>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- 9. Additional Information/Notes -->
+                <fieldset class="mb-4">
+                    <legend class="h5 mb-3">9. Additional Information/Notes</legend>
+                    <p class="text-muted mb-2">Any special requests or considerations for the interpreter?</p>
+                    <div class="mb-3">
+                        <label asp-for="Request.AdditionalNotes" class="form-label">Notes</label>
+                        <textarea asp-for="Request.AdditionalNotes" class="form-control" rows="4" placeholder="Special requests, accessibility needs, etc."></textarea>
+                    </div>
+                </fieldset>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg">Submit Request</button>
+                    <a asp-page="/Home" class="btn btn-secondary btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            // Clear validation errors as user types/selects
+            function clearFieldError(fieldName) {
+                var field = document.querySelector('[name="' + fieldName + '"]');
+                if (field) {
+                    field.addEventListener('input', function() {
+                        var errorSpan = field.parentElement.querySelector('.text-danger');
+                        if (errorSpan) {
+                            errorSpan.textContent = '';
+                            errorSpan.style.display = 'none';
+                        }
+                        field.classList.remove('is-invalid');
+                    });
+                }
+            }
+
+            // Clear errors for all form fields
+            clearFieldError('Request.RequestName');
+            clearFieldError('AppointmentDate');
+            clearFieldError('RequestorPhone');
+            clearFieldError('RequestorEmail');
+            clearFieldError('Request.TypeOfService');
+            clearFieldError('Request.Address');
+            clearFieldError('Request.City');
+            clearFieldError('Request.ZipCode');
+
+            // Clear errors for radio buttons (TypeOfService)
+            var typeRadios = document.querySelectorAll('input[name="Request.TypeOfService"]');
+            typeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    var errorSpan = document.querySelector('[data-valmsg-for="Request.TypeOfService"]');
+                    if (errorSpan) {
+                        errorSpan.textContent = '';
+                        errorSpan.style.display = 'none';
+                    }
+                });
+            });
+
+            // Toggle virtual/in-person sections
+            var modeInPerson = document.getElementById('mode-inperson');
+            var modeVirtual = document.getElementById('mode-virtual');
+            var virtualSection = document.getElementById('virtual-link-section');
+            var inpersonSection = document.getElementById('inperson-location-section');
+            var addressInput = document.getElementById('Request_Address');
+            var cityInput = document.getElementById('Request_City');
+            var stateInput = document.getElementById('Request_State');
+            var zipInput = document.getElementById('Request_ZipCode');
+
+            function toggleMode() {
+                var isVirtual = modeVirtual.checked;
+                virtualSection.style.display = isVirtual ? 'block' : 'none';
+                inpersonSection.style.display = isVirtual ? 'none' : 'block';
+                if (addressInput) addressInput.required = !isVirtual;
+                if (cityInput) cityInput.required = !isVirtual;
+                if (stateInput) stateInput.required = !isVirtual;
+                if (zipInput) zipInput.required = !isVirtual;
+            }
+
+            if (modeInPerson) modeInPerson.addEventListener('change', toggleMode);
+            if (modeVirtual) modeVirtual.addEventListener('change', toggleMode);
+            toggleMode();
+
+            // Toggle "Other" appointment type field
+            var typeOther = document.getElementById('type-other');
+            var otherWrap = document.getElementById('other-specify-wrap');
+            if (typeOther && otherWrap) {
+                typeOther.addEventListener('change', function() {
+                    otherWrap.style.display = typeOther.checked ? 'block' : 'none';
+                });
+            }
+
+            // Clear validation errors as user types/selects
+            function clearFieldError(fieldName) {
+                var field = document.querySelector('[name="' + fieldName + '"]');
+                if (field) {
+                    var clearError = function() {
+                        // Clear the error span next to the field
+                        var fieldContainer = field.closest('.mb-3') || field.parentElement;
+                        if (fieldContainer) {
+                            var errorSpan = fieldContainer.querySelector('span.text-danger');
+                            if (errorSpan && errorSpan !== field) {
+                                errorSpan.textContent = '';
+                                errorSpan.style.display = 'none';
+                            }
+                        }
+                        // Remove invalid class
+                        field.classList.remove('is-invalid');
+                        // Clear from validation summary at top
+                        var summary = document.querySelector('.validation-summary-errors');
+                        if (!summary) {
+                            summary = document.querySelector('div.text-danger.mb-3');
+                        }
+                        if (summary) {
+                            // Handle UL/LI structure
+                            if (summary.tagName === 'UL' || summary.querySelector('li')) {
+                                var summaryItems = summary.querySelectorAll('li');
+                                summaryItems.forEach(function(item) {
+                                    var errorText = item.textContent.toLowerCase();
+                                    var fieldNameLower = fieldName.toLowerCase().replace(/request\./g, '');
+                                    if (errorText.includes(fieldNameLower) || 
+                                        (fieldName === 'Request.RequestName' && (errorText.includes('request name') || errorText.includes('name'))) ||
+                                        (fieldName === 'AppointmentDate' && (errorText.includes('appointment date') || errorText.includes('date'))) ||
+                                        (fieldName === 'Request.Address' && errorText.includes('address')) ||
+                                        (fieldName === 'Request.City' && errorText.includes('city')) ||
+                                        (fieldName === 'Request.State' && errorText.includes('state')) ||
+                                        (fieldName === 'Request.ZipCode' && (errorText.includes('zip') || errorText.includes('code')))) {
+                                        item.remove();
+                                    }
+                                });
+                                // Hide summary if no errors left
+                                if (summary.querySelectorAll('li').length === 0) {
+                                    summary.style.display = 'none';
+                                }
+                            } else {
+                                // Handle div with direct text content
+                                var errorText = summary.textContent.toLowerCase();
+                                var fieldNameLower = fieldName.toLowerCase().replace(/request\./g, '');
+                                if (errorText.includes(fieldNameLower) || 
+                                    (fieldName === 'Request.RequestName' && (errorText.includes('request name') || errorText.includes('name'))) ||
+                                    (fieldName === 'AppointmentDate' && (errorText.includes('appointment date') || errorText.includes('date'))) ||
+                                    (fieldName === 'Request.Address' && errorText.includes('address')) ||
+                                    (fieldName === 'Request.City' && errorText.includes('city')) ||
+                                    (fieldName === 'Request.State' && errorText.includes('state')) ||
+                                    (fieldName === 'Request.ZipCode' && (errorText.includes('zip') || errorText.includes('code')))) {
+                                    // Remove the entire summary if it only contains this error
+                                    if (summary.textContent.trim().split('\n').length <= 2) {
+                                        summary.style.display = 'none';
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    
+                    field.addEventListener('input', clearError);
+                    field.addEventListener('change', clearError);
+                }
+            }
+
+            // Clear errors for all form fields
+            clearFieldError('Request.RequestName');
+            clearFieldError('AppointmentDate');
+            clearFieldError('RequestorPhone');
+            clearFieldError('RequestorEmail');
+            clearFieldError('Request.Address');
+            clearFieldError('Request.City');
+            clearFieldError('Request.ZipCode');
+            
+            // Handle state dropdown separately
+            var stateSelect = document.querySelector('select[name="Request.State"]');
+            if (stateSelect) {
+                stateSelect.addEventListener('change', function() {
+                    var fieldContainer = this.closest('.mb-3');
+                    if (fieldContainer) {
+                        var errorSpan = fieldContainer.querySelector('span.text-danger');
+                        if (errorSpan) {
+                            errorSpan.textContent = '';
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                    this.classList.remove('is-invalid');
+                });
+            }
+
+            // Clear errors for radio buttons (TypeOfService)
+            var typeRadios = document.querySelectorAll('input[name="Request.TypeOfService"]');
+            typeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    // Find and clear the error span
+                    var fieldset = this.closest('fieldset');
+                    if (fieldset) {
+                        var errorSpan = fieldset.querySelector('.text-danger[data-valmsg-for="Request.TypeOfService"]');
+                        if (!errorSpan) {
+                            // Try to find any error span in the fieldset
+                            var allErrors = fieldset.querySelectorAll('.text-danger');
+                            allErrors.forEach(function(err) {
+                                if (err.textContent.includes('type of appointment')) {
+                                    err.textContent = '';
+                                    err.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            errorSpan.textContent = '';
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                    // Clear from validation summary
+                    var summary = document.querySelector('.validation-summary-errors');
+                    if (summary) {
+                        var summaryItems = summary.querySelectorAll('li');
+                        summaryItems.forEach(function(item) {
+                            if (item.textContent.includes('type of appointment')) {
+                                item.remove();
+                            }
+                        });
+                    }
+                });
+            });
+
+            // ZIP code auto-populate
+            var zipCodeInput = document.querySelector('input[name="Request.ZipCode"]');
+            var cityInput = document.querySelector('input[name="Request.City"]');
+            var stateSelect = document.querySelector('select[name="Request.State"]');
+            var zipCodeTimeout;
+
+            if (zipCodeInput && cityInput && stateSelect) {
+                zipCodeInput.addEventListener('input', function() {
+                    clearTimeout(zipCodeTimeout);
+                    var zip = this.value.trim();
+                    var zipDigits = zip.replace(/\D/g, '');
+                    if (zipDigits.length < 5) {
+                        return;
+                    }
+
+                    zipCodeTimeout = setTimeout(function() {
+                        fetch('/Requests/SearchZipCodes?zip=' + encodeURIComponent(zip))
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.city) {
+                                    if (!cityInput.dataset.manualEdit) {
+                                        cityInput.value = data.city;
+                                    }
+                                    if (!stateSelect.dataset.manualEdit && data.state) {
+                                        // Set the state dropdown value
+                                        var stateValue = data.state.toUpperCase();
+                                        stateSelect.value = stateValue;
+                                        // Trigger change event to clear any errors
+                                        stateSelect.dispatchEvent(new Event('change'));
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error searching zip codes:', error);
+                            });
+                    }, 500);
+                });
+
+                cityInput.addEventListener('input', function() {
+                    if (this.value.trim().length > 0) {
+                        this.dataset.manualEdit = 'true';
+                    } else {
+                        delete this.dataset.manualEdit;
+                    }
+                });
+
+                stateSelect.addEventListener('change', function() {
+                    if (this.value && this.value.trim().length > 0) {
+                        this.dataset.manualEdit = 'true';
+                    } else {
+                        delete this.dataset.manualEdit;
+                    }
+                });
+            }
+        })();
+    </script>
+}

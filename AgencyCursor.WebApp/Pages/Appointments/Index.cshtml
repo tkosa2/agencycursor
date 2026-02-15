@@ -1,0 +1,63 @@
+@page
+@model AgencyCursor.Pages.Appointments.IndexModel
+@{
+    ViewData["Title"] = "Appointments";
+}
+
+<h1>Appointments</h1>
+<p class="text-muted">Scheduled services when an interpreter is assigned to a request.</p>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Create New Appointment</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Request</th>
+            <th>Requestor</th>
+            <th>Interpreter</th>
+            <th>Date/Time</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var a in Model.Appointments)
+        {
+            <tr>
+                <td><a asp-page="/Requests/Details" asp-route-id="@a.RequestId">Request #@a.RequestId</a></td>
+                <td>@a.Request?.Requestor?.Name</td>
+                <td><a asp-page="/Interpreters/Details" asp-route-id="@a.InterpreterId">@a.Interpreter?.Name</a></td>
+                <td>@a.ServiceDateTime.ToString("g")</td>
+                <td>@a.Location</td>
+                <td><span class="badge bg-info">@a.Status</span></td>
+                <td>
+                    <a asp-page="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                    <a asp-page="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <form method="post" asp-page-handler="Clone" asp-route-id="@a.Id" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-info" onclick="return confirm('Clone this appointment?');">Clone</button>
+                    </form>
+                    <a asp-page="Delete" asp-route-id="@a.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

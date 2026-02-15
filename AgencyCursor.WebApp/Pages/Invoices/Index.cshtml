@@ -1,0 +1,51 @@
+@page
+@model AgencyCursor.Pages.Invoices.IndexModel
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+<h1>Invoices</h1>
+<p class="text-muted">Billing documents for completed services.</p>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">New Invoice</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Invoice #</th>
+            <th>Requestor</th>
+            <th>Interpreter</th>
+            <th>Service</th>
+            <th>Total</th>
+            <th>Payment Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var inv in Model.Invoices)
+        {
+            <tr>
+                <td>@inv.InvoiceNumber</td>
+                <td><a asp-page="/Requestors/Details" asp-route-id="@inv.RequestorId">@inv.Requestor?.Name</a></td>
+                <td>@inv.Interpreter?.Name</td>
+                <td>@inv.ServiceType</td>
+                <td>@inv.TotalCost.ToString("C")</td>
+                <td>
+                    <span class="badge @(inv.PaymentStatus == "Paid" ? "bg-success" : 
+                                          inv.PaymentStatus == "Partially Paid" ? "bg-info" : 
+                                          inv.PaymentStatus == "Overdue" ? "bg-danger" : 
+                                          inv.PaymentStatus == "Cancelled" ? "bg-secondary" : 
+                                          inv.PaymentStatus == "Refunded" ? "bg-secondary" : 
+                                          "bg-warning")">@inv.PaymentStatus</span>
+                </td>
+                <td>
+                    <a asp-page="Details" asp-route-id="@inv.Id">Details</a> |
+                    <a asp-page="Edit" asp-route-id="@inv.Id">Edit</a> |
+                    <a asp-page="Delete" asp-route-id="@inv.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

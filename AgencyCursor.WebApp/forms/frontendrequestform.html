@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request an Interpreter – THAT! Interpreting Services</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+  <header class="site-header">
+    <div class="wrap">
+      <h1 class="logo"><a href="index.html">THAT! Interpreting Services</a></h1>
+      <nav aria-label="Main">
+        <ul class="nav-list">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="request.html">Request</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="wrap">
+      <h1>Request an Interpreter</h1>
+      <p>Submit your request for a qualified sign language or DeafBlind interpreter. We will respond as soon as possible.</p>
+
+      <form class="section" action="#" method="post" aria-labelledby="request-form-heading">
+        <h2 id="request-form-heading">Request form</h2>
+
+        <!-- 1. Requestor Information -->
+        <fieldset class="form-section" aria-labelledby="sec-requestor">
+          <legend id="sec-requestor" class="form-section-title">1. Requestor Information</legend>
+          <div class="field-group">
+            <label for="request-name">Request Name <span aria-hidden="true">*</span></label>
+            <input type="text" id="request-name" name="request_name" required autocomplete="name" placeholder="Client/Requestor name">
+          </div>
+          <div class="field-group">
+            <label for="num-individuals">Number of Deaf/Hard-of-Hearing or Deaf-Blind Individuals <span aria-hidden="true">*</span></label>
+            <input type="number" id="num-individuals" name="num_individuals" required min="1" max="99" value="1">
+          </div>
+          <p style="margin-bottom:0.5rem;">Please specify if the individual is Deaf or Deaf-Blind:</p>
+          <div class="radio-group" role="radiogroup" aria-labelledby="individual-type-label">
+            <span id="individual-type-label" class="visually-hidden">Type of individual</span>
+            <label><input type="radio" name="individual_type" value="deaf" checked> Deaf</label>
+            <label><input type="radio" name="individual_type" value="deafblind"> Deaf-Blind</label>
+            <label><input type="radio" name="individual_type" value="deaf_deafblind_hh"> Deaf/DeafBlind/Hard of Hearing</label>
+          </div>
+        </fieldset>
+
+        <!-- 2. Contact Information -->
+        <fieldset class="form-section" aria-labelledby="sec-contact">
+          <legend id="sec-contact" class="form-section-title">2. Contact Information</legend>
+          <div class="field-group">
+            <label for="phone">Phone Number <span class="text-muted">(for urgent communication, such as delays)</span> <span aria-hidden="true">*</span></label>
+            <input type="tel" id="phone" name="phone" required autocomplete="tel">
+          </div>
+          <div class="field-group">
+            <label for="email">Email Address <span class="text-muted">(for confirmation/updates)</span> <span aria-hidden="true">*</span></label>
+            <input type="email" id="email" name="email" required autocomplete="email">
+          </div>
+        </fieldset>
+
+        <!-- 3. Appointment Details -->
+        <fieldset class="form-section" aria-labelledby="sec-appointment">
+          <legend id="sec-appointment" class="form-section-title">3. Appointment Details</legend>
+          <div class="field-group">
+            <label for="date">Date of Appointment <span aria-hidden="true">*</span></label>
+            <input type="date" id="date" name="date" required>
+          </div>
+          <div class="field-group">
+            <label for="start-time">Start Time <span aria-hidden="true">*</span></label>
+            <input type="time" id="start-time" name="start_time" required>
+          </div>
+          <div class="field-group">
+            <label for="end-time">End Time <span aria-hidden="true">*</span></label>
+            <input type="time" id="end-time" name="end_time" required>
+          </div>
+        </fieldset>
+
+        <!-- 4. Type of Appointment -->
+        <fieldset class="form-section" aria-labelledby="sec-type">
+          <legend id="sec-type" class="form-section-title">4. Type of Appointment</legend>
+          <p style="margin-bottom:0.5rem;">Please select one:</p>
+          <div class="radio-group" role="radiogroup" aria-labelledby="sec-type">
+            <label><input type="radio" name="appointment_type" value="medical" id="type-medical"> Medical</label>
+            <label><input type="radio" name="appointment_type" value="legal" id="type-legal"> Legal</label>
+            <label><input type="radio" name="appointment_type" value="educational" id="type-educational"> Educational</label>
+            <label><input type="radio" name="appointment_type" value="other" id="type-other"> Other</label>
+          </div>
+          <div class="field-group form-conditional" id="other-specify-wrap" style="display:none;">
+            <label for="other-specify">Other (Please specify)</label>
+            <input type="text" id="other-specify" name="appointment_type_other" placeholder="Specify type of appointment">
+          </div>
+        </fieldset>
+
+        <!-- 5. Mode of Interpretation -->
+        <fieldset class="form-section" aria-labelledby="sec-mode">
+          <legend id="sec-mode" class="form-section-title">5. Mode of Interpretation</legend>
+          <p style="margin-bottom:0.5rem;">Please select one:</p>
+          <div class="radio-group" role="radiogroup" aria-labelledby="sec-mode">
+            <label><input type="radio" name="mode" value="in-person" id="mode-inperson" checked> In-Person</label>
+            <label><input type="radio" name="mode" value="virtual" id="mode-virtual"> Virtual (Please provide the link below)</label>
+          </div>
+        </fieldset>
+
+        <!-- 6. Virtual Appointment Link -->
+        <fieldset class="form-section" id="virtual-link-section" aria-labelledby="sec-virtual" style="display:none;">
+          <legend id="sec-virtual" class="form-section-title">6. Virtual Appointment Link</legend>
+          <p class="text-muted" style="margin-bottom:0.75rem;">If virtual, provide the link to the meeting.</p>
+          <div class="field-group">
+            <label for="meeting-link">Link to Meeting</label>
+            <input type="url" id="meeting-link" name="meeting_link" placeholder="https://">
+          </div>
+        </fieldset>
+
+        <!-- 7. In-Person Appointment Location -->
+        <fieldset class="form-section" id="inperson-location-section" aria-labelledby="sec-location">
+          <legend id="sec-location" class="form-section-title">7. In-Person Appointment Location</legend>
+          <p class="text-muted" style="margin-bottom:0.75rem;">Please include floor/suite if applicable.</p>
+          <div class="field-group">
+            <label for="address">Address <span aria-hidden="true">*</span></label>
+            <input type="text" id="address" name="address" required placeholder="Street address">
+          </div>
+          <div class="field-group">
+            <label for="address2">Address 2</label>
+            <input type="text" id="address2" name="address2" placeholder="Apartment, suite, floor, etc.">
+          </div>
+          <div class="field-group">
+            <label for="city">City <span aria-hidden="true">*</span></label>
+            <input type="text" id="city" name="city" required placeholder="City">
+          </div>
+          <div class="field-group">
+            <label for="state">State <span aria-hidden="true">*</span></label>
+            <input type="text" id="state" name="state" required placeholder="State" maxlength="2" pattern="[A-Za-z]{2}" title="Two-letter state code">
+          </div>
+          <div class="field-group">
+            <label for="zip">ZIP Code <span aria-hidden="true">*</span></label>
+            <input type="text" id="zip" name="zip" required placeholder="ZIP code" pattern="[0-9]{5}(-[0-9]{4})?" title="5-digit ZIP code or ZIP+4">
+          </div>
+        </fieldset>
+
+        <!-- 8. Interpreter Preferences -->
+        <fieldset class="form-section" aria-labelledby="sec-preferences">
+          <legend id="sec-preferences" class="form-section-title">8. Interpreter Preferences</legend>
+          <div class="field-group">
+            <span class="form-section-title" style="font-size:1rem;">Gender Preference</span>
+            <div class="radio-group" role="radiogroup" aria-label="Gender preference">
+              <label><input type="radio" name="gender_preference" value="male"> Male</label>
+              <label><input type="radio" name="gender_preference" value="female"> Female</label>
+              <label><input type="radio" name="gender_preference" value="none" checked> No Preference</label>
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="preferred-interpreter">Preferred Interpreter <span class="text-muted">(optional)</span></label>
+            <input type="text" id="preferred-interpreter" name="preferred_interpreter" placeholder="Name of interpreter if any">
+          </div>
+          <div class="field-group">
+            <span class="form-section-title" style="font-size:1rem;">Specialization</span>
+            <p class="text-muted" style="margin-bottom:0.5rem;">Please select any that apply:</p>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="specialization" value="asl"> ASL (American Sign Language)</label><br>
+              <label><input type="checkbox" name="specialization" value="cdi"> CDI (Certified Deaf Interpreter)</label><br>
+              <label><input type="checkbox" name="specialization" value="russian"> Russian Sign Language</label><br>
+              <label><input type="checkbox" name="specialization" value="universe"> Universe (if applicable)</label><br>
+              <label><input type="checkbox" name="specialization" value="tactile"> Tactile</label><br>
+              <label><input type="checkbox" name="specialization" value="closed_up"> Closed up</label><br>
+              <label><input type="checkbox" name="specialization" value="low_vision"> Low vision</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 9. Additional Information/Notes -->
+        <fieldset class="form-section" aria-labelledby="sec-notes">
+          <legend id="sec-notes" class="form-section-title">9. Additional Information/Notes</legend>
+          <p class="text-muted" style="margin-bottom:0.5rem;">Any special requests or considerations for the interpreter?</p>
+          <div class="field-group">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" placeholder="Special requests, accessibility needs, etc."></textarea>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn">Submit request</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <ul class="footer-links">
+        <li><a href="request.html">Request an Interpreter</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <div class="footer-refs">
+        <a href="https://adata.org" target="_blank" rel="noopener">ADA National Network</a>
+        <a href="https://www.rid.org" target="_blank" rel="noopener">Registry of Interpreters for the Deaf, Inc.</a>
+      </div>
+      <p class="text-muted" style="margin-top:1rem; font-size:0.85rem;">&copy; 2012&ndash;2025 THAT! Interpreting Services of Deaf &amp; DeafBlind, INC.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      var modeInPerson = document.getElementById('mode-inperson');
+      var modeVirtual = document.getElementById('mode-virtual');
+      var virtualSection = document.getElementById('virtual-link-section');
+      var inpersonSection = document.getElementById('inperson-location-section');
+      var addressInput = document.getElementById('address');
+      var cityInput = document.getElementById('city');
+      var stateInput = document.getElementById('state');
+      var zipInput = document.getElementById('zip');
+
+      function toggleMode() {
+        var isVirtual = modeVirtual.checked;
+        virtualSection.style.display = isVirtual ? 'block' : 'none';
+        inpersonSection.style.display = isVirtual ? 'none' : 'block';
+        addressInput.required = !isVirtual;
+        cityInput.required = !isVirtual;
+        stateInput.required = !isVirtual;
+        zipInput.required = !isVirtual;
+      }
+
+      modeInPerson.addEventListener('change', toggleMode);
+      modeVirtual.addEventListener('change', toggleMode);
+      toggleMode();
+
+      var typeOther = document.getElementById('type-other');
+      var otherWrap = document.getElementById('other-specify-wrap');
+      typeOther.addEventListener('change', function() {
+        otherWrap.style.display = typeOther.checked ? 'block' : 'none';
+      });
+    })();
+  </script>
+</body>
+</html>

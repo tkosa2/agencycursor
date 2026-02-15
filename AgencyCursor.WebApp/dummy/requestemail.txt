@@ -1,0 +1,64 @@
+Dear [Requestor Name],
+
+Thank you for submitting your request for interpreting services. Below is the information we received from your form submission:
+
+1. Requestor Information:
+
+Client Name: John Doe
+
+Number of Deaf/Hard-of-Hearing or Deaf-Blind Individuals: 2
+
+Deaf: 2
+
+Deaf-Blind: 0
+
+2. Contact Information:
+
+Phone Number: +1 (555) 123-4567
+
+Email Address: johndoe@example.com
+
+3. Appointment Details:
+
+Date of Appointment: March 15, 2026
+
+Start Time: 10:00 AM
+
+End Time: 12:00 PM
+
+4. Type of Appointment:
+
+Medical
+
+5. Mode of Interpretation:
+
+In-Person
+
+6. In-Person Appointment Location:
+
+Address: 123 Main St, Suite 101
+
+Floor/Suite: 1st Floor, Suite 101
+
+7. Interpreter Preferences:
+
+Gender Preference: Female
+
+Preferred Interpreter (optional): Jane Doe
+
+Specialization:
+
+ASL (American Sign Language)
+
+Tactile (Deaf-Blind)
+
+8. Additional Information/Notes:
+
+Please ensure that the interpreter is familiar with medical terminology. The individual attending the appointment is Deaf-Blind and may require tactile interpreting.
+
+Best regards,
+[Your Agency Name]
+[Your Agency's Contact Information]
+[Website URL (if applicable)]
+[Phone Number]
+[Email Address]

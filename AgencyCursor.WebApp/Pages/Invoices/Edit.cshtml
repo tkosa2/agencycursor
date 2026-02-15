@@ -1,0 +1,64 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Invoices.EditModel
+@{
+    ViewData["Title"] = "Edit Invoice";
+}
+
+<h1>Edit Invoice</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Invoice.Id" />
+    <input type="hidden" asp-for="Invoice.RequestorId" />
+    <input type="hidden" asp-for="Invoice.AppointmentId" />
+    <input type="hidden" asp-for="Invoice.InterpreterId" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-2">
+        <label asp-for="Invoice.InvoiceNumber" class="form-label"></label>
+        <input asp-for="Invoice.InvoiceNumber" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.ServiceType" class="form-label"></label>
+        <input asp-for="Invoice.ServiceType" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.HoursWorked" class="form-label"></label>
+        <input asp-for="Invoice.HoursWorked" class="form-control" type="number" step="0.25" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.HourlyRate" class="form-label"></label>
+        <input asp-for="Invoice.HourlyRate" class="form-control" type="number" step="0.01" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.Discount" class="form-label"></label>
+        <input asp-for="Invoice.Discount" class="form-control" type="number" step="0.01" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.TotalCost" class="form-label"></label>
+        <input asp-for="Invoice.TotalCost" class="form-control" type="number" step="0.01" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.PaymentStatus" class="form-label"></label>
+        <select asp-for="Invoice.PaymentStatus" class="form-select">
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+            <option value="Partially Paid">Partially Paid</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Refunded">Refunded</option>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.PaymentMethod" class="form-label"></label>
+        <input asp-for="Invoice.PaymentMethod" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Invoice.Notes" class="form-label"></label>
+        <textarea asp-for="Invoice.Notes" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

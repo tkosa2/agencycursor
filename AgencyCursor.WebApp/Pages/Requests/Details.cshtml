@@ -1,0 +1,164 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Requests.DetailsModel
+@{
+    ViewData["Title"] = "Request Details";
+}
+
+<h1>Request #@Model.Request?.Id</h1>
+<dl class="row">
+    <dt class="col-sm-2">Requestor</dt>
+    <dd class="col-sm-10"><a asp-page="/Requestors/Details" asp-route-id="@Model.Request?.RequestorId">@Model.Request?.Requestor?.Name</a></dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.RequestName))
+    {
+        <dt class="col-sm-2">Request Name</dt>
+        <dd class="col-sm-10">@Model.Request.RequestName</dd>
+    }
+    <dt class="col-sm-2">Number of Individuals</dt>
+    <dd class="col-sm-10">@Model.Request?.NumberOfIndividuals</dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.IndividualType))
+    {
+        <dt class="col-sm-2">Individual Type</dt>
+        <dd class="col-sm-10">@Model.Request.IndividualType</dd>
+    }
+    <dt class="col-sm-2">Type of Service</dt>
+    <dd class="col-sm-10">
+        @Model.Request?.TypeOfService
+        @if (!string.IsNullOrEmpty(Model.Request?.TypeOfServiceOther))
+        {
+            <span class="text-muted"> - @Model.Request.TypeOfServiceOther</span>
+        }
+    </dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.Mode))
+    {
+        <dt class="col-sm-2">Mode of Interpretation</dt>
+        <dd class="col-sm-10">@Model.Request.Mode</dd>
+    }
+    <dt class="col-sm-2">Preferred Interpreter</dt>
+    <dd class="col-sm-10">
+        @if (!string.IsNullOrEmpty(Model.Request?.PreferredInterpreterName))
+        {
+            @Model.Request.PreferredInterpreterName
+        }
+        else if (Model.Request?.PreferredInterpreter != null)
+        {
+            <a asp-page="/Interpreters/Details" asp-route-id="@Model.Request.PreferredInterpreterId">@Model.Request.PreferredInterpreter.Name</a>
+        }
+        else
+        {
+            <text>—</text>
+        }
+    </dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.GenderPreference))
+    {
+        <dt class="col-sm-2">Gender Preference</dt>
+        <dd class="col-sm-10">@Model.Request.GenderPreference</dd>
+    }
+    @if (!string.IsNullOrEmpty(Model.Request?.Specializations))
+    {
+        <dt class="col-sm-2">Specializations</dt>
+        <dd class="col-sm-10">@Model.Request.Specializations</dd>
+    }
+    <dt class="col-sm-2">Date and Time</dt>
+    <dd class="col-sm-10">
+        @Model.Request?.ServiceDateTime.ToString("g")
+        @if (Model.Request?.EndDateTime.HasValue == true)
+        {
+            <text> - @Model.Request.EndDateTime.Value.ToString("g")</text>
+        }
+    </dd>
+    <dt class="col-sm-2">Location</dt>
+    <dd class="col-sm-10">@Model.Request?.Location</dd>
+    @if (Model.Request?.Mode == "Virtual" && !string.IsNullOrEmpty(Model.Request?.MeetingLink))
+    {
+        <dt class="col-sm-2">Meeting Information</dt>
+        <dd class="col-sm-10">
+            <pre style="white-space: pre-wrap; font-family: inherit; background-color: #f8f9fa; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #dee2e6;">@Model.Request.MeetingLink</pre>
+        </dd>
+    }
+    @if (Model.Request?.Mode == "In-Person" || string.IsNullOrEmpty(Model.Request?.Mode))
+    {
+        @if (!string.IsNullOrEmpty(Model.Request?.Address))
+        {
+            <dt class="col-sm-2">Address</dt>
+            <dd class="col-sm-10">
+                @Model.Request.Address
+                @if (!string.IsNullOrEmpty(Model.Request.Address2))
+                {
+                    <br />@Model.Request.Address2
+                }
+                @if (!string.IsNullOrEmpty(Model.Request.City) || !string.IsNullOrEmpty(Model.Request.State) || !string.IsNullOrEmpty(Model.Request.ZipCode))
+                {
+                    <br />
+                    @if (!string.IsNullOrEmpty(Model.Request.City))
+                    {
+                        @Model.Request.City
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Request.State))
+                    {
+                        <text>, @Model.Request.State</text>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Request.ZipCode))
+                    {
+                        <text> @Model.Request.ZipCode</text>
+                    }
+                }
+            </dd>
+        }
+    }
+    <dt class="col-sm-2">Status</dt>
+    <dd class="col-sm-10"><span class="badge bg-secondary">@Model.Request?.Status</span></dd>
+    <dt class="col-sm-2">Appointment</dt>
+    <dd class="col-sm-10">
+        @if (Model.Appointments.Any())
+        {
+            var appointment = Model.Appointments.First();
+            <a asp-page="/Appointments/Details" asp-route-id="@appointment.Id">Appointment #@appointment.Id</a>
+            <span class="text-muted"> - @appointment.ServiceDateTime.ToString("g")</span>
+            @if (appointment.Interpreter != null)
+            {
+                <span class="text-muted"> with @appointment.Interpreter.Name</span>
+            }
+            @if (Model.Appointments.Count > 1)
+            {
+                <span class="text-muted"> (@Model.Appointments.Count total appointments)</span>
+            }
+        }
+        else
+        {
+            <text>No appointment yet</text>
+        }
+    </dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.AdditionalNotes))
+    {
+        <dt class="col-sm-2">Additional Notes</dt>
+        <dd class="col-sm-10">@Model.Request.AdditionalNotes</dd>
+    }
+</dl>
+<p>
+    <a asp-page="Edit" asp-route-id="@Model.Request?.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="/Appointments/Create" asp-route-requestId="@Model.Request?.Id" class="btn btn-success">Assign Interpreter</a>
+    <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+</p>
+
+<h2>Appointments (Assignments)</h2>
+@if (Model.Appointments.Any())
+{
+    <table class="table table-sm">
+        <thead><tr><th>Interpreter</th><th>Date/Time</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var a in Model.Appointments)
+            {
+                <tr>
+                    <td><a asp-page="/Interpreters/Details" asp-route-id="@a.InterpreterId">@a.Interpreter?.Name</a></td>
+                    <td>@a.ServiceDateTime.ToString("g")</td>
+                    <td>@a.Status</td>
+                    <td><a asp-page="/Appointments/Details" asp-route-id="@a.Id">View</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No interpreter assigned yet. <a asp-page="/Appointments/Create" asp-route-requestId="@Model.Request?.Id">Assign Interpreter</a></p>
+}

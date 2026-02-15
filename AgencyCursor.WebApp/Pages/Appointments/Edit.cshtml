@@ -1,0 +1,74 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Appointments.EditModel
+@{
+    var requestorName = Model.Appointment?.Request?.Requestor?.Name ?? "Unknown";
+    var requestorId = Model.Appointment?.Request?.RequestorId ?? 0;
+    ViewData["Title"] = $"Edit Appointment for {requestorName} ({requestorId})";
+}
+
+<h1>Edit Appointment for @requestorName (@requestorId)</h1>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<form method="post">
+    <input type="hidden" asp-for="Appointment.Id" />
+    <input type="hidden" asp-for="Appointment.RequestId" />
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+    <div class="mb-2">
+        <label asp-for="Appointment.InterpreterId" class="form-label">Interpreter</label>
+        <select asp-for="Appointment.InterpreterId" class="form-select" asp-items="Model.InterpreterList">
+            <option value="">-- Select Interpreter --</option>
+        </select>
+        <span asp-validation-for="Appointment.InterpreterId" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ServiceDateTime" class="form-label">Date and Time</label>
+        <input asp-for="Appointment.ServiceDateTime" class="form-control" type="datetime-local" />
+        <span asp-validation-for="Appointment.ServiceDateTime" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.Location" class="form-label"></label>
+        <select asp-for="Appointment.Location" class="form-select">
+            <option value="In-Person">In-Person</option>
+            <option value="Virtual">Virtual</option>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ServiceDetails" class="form-label"></label>
+        <input asp-for="Appointment.ServiceDetails" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.DurationMinutes" class="form-label"></label>
+        <input asp-for="Appointment.DurationMinutes" class="form-control" type="number" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ClientEmployeeName" class="form-label"></label>
+        <input asp-for="Appointment.ClientEmployeeName" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.Status" class="form-label"></label>
+        <select asp-for="Appointment.Status" class="form-select">
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.AdditionalNotes" class="form-label"></label>
+        <textarea asp-for="Appointment.AdditionalNotes" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,37 @@
+@page
+@model AgencyCursor.Pages.Requestors.IndexModel
+@{
+    ViewData["Title"] = "Requestors";
+}
+
+<h1>Requestors</h1>
+<p class="text-muted">Clients who request interpreting services.</p>
+
+<p>
+    <a asp-page="Create" class="btn btn-primary">Add Requestor</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model.Requestors)
+        {
+            <tr>
+                <td><a asp-page="Details" asp-route-id="@r.Id">@r.Name</a></td>
+                <td>@r.Phone</td>
+                <td>@r.Email</td>
+                <td>
+                    <a asp-page="Edit" asp-route-id="@r.Id">Edit</a> |
+                    <a asp-page="Delete" asp-route-id="@r.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

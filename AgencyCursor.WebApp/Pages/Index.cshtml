@@ -1,0 +1,332 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="mb-4">Interpreting Agency Dashboard</h1>
+
+<!-- Priority Section: Pending Requests, Appointments, and Invoices -->
+<div class="row g-3 mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 border-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-warning fw-bold">📋 Pending Requests</h5>
+                <p class="card-text display-4 fw-bold mb-3 text-warning">@Model.PendingRequestsCount</p>
+                <a asp-page="/Requests/Index" class="btn btn-warning w-100">View All Requests</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-primary shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-primary fw-bold mb-3">📅 Appointments</h5>
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="text-muted small">Pending</div>
+                            <div class="h4 fw-bold">@Model.PendingAppointmentsCount</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="text-muted small">Assigned</div>
+                            <div class="h4 fw-bold">@Model.AssignedAppointmentsCount</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="text-muted small">Completed</div>
+                            <div class="h4 fw-bold">@Model.CompletedAppointmentsCount</div>
+                        </div>
+                    </div>
+                </div>
+                <a asp-page="/Appointments/Index" class="btn btn-primary w-100">View All Appointments</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-warning shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-warning fw-bold">💰 Unpaid Invoices</h5>
+                <p class="card-text display-4 fw-bold mb-3">@Model.PendingInvoicesCount</p>
+                <a asp-page="/Invoices/Index" class="btn btn-warning w-100">View All Invoices</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Section -->
+<hr class="my-4" />
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📅 Appointments & Requests Calendar</h5>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-light" id="prevMonth">← Previous</button>
+                        <button type="button" class="btn btn-sm btn-light" id="nextMonth">Next →</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="calendar-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Section: Other Metrics -->
+<hr class="my-4" />
+<h3 class="mb-3 text-muted">Overview</h3>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Requestors</h5>
+                <p class="card-text display-6">@Model.RequestorsCount</p>
+                <a asp-page="/Requestors/Index" class="card-link">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Interpreters</h5>
+                <p class="card-text display-6">@Model.InterpretersCount</p>
+                <a asp-page="/Interpreters/Index" class="card-link">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var appointments = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Appointments.Select(a => new {
+                id = a.Id,
+                title = a.Interpreter?.Name ?? "Unassigned",
+                date = a.ServiceDateTime.ToString("yyyy-MM-dd"),
+                time = a.ServiceDateTime.ToString("HH:mm"),
+                status = a.Status,
+                requestor = a.Request?.Requestor?.Name ?? "Unknown",
+                requestId = a.RequestId,
+                type = "appointment"
+            })));
+            
+            var requests = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Requests.Select(r => new {
+                id = r.Id,
+                title = r.RequestName ?? "Request",
+                date = r.ServiceDateTime.ToString("yyyy-MM-dd"),
+                time = r.ServiceDateTime.ToString("HH:mm"),
+                status = r.Status,
+                requestor = r.Requestor?.Name ?? "Unknown",
+                type = "request"
+            })));
+            
+            // Combine appointments and requests
+            var allEvents = appointments.concat(requests);
+
+            var currentDate = new Date();
+            var currentMonth = currentDate.getMonth();
+            var currentYear = currentDate.getFullYear();
+
+            function renderCalendar(month, year) {
+                var firstDay = new Date(year, month, 1);
+                var lastDay = new Date(year, month + 1, 0);
+                var daysInMonth = lastDay.getDate();
+                var startingDayOfWeek = firstDay.getDay();
+
+                var monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+
+                var html = '<h4 class="mb-3">' + monthNames[month] + ' ' + year + '</h4>';
+                html += '<table class="table table-bordered calendar-table">';
+                html += '<thead><tr>';
+                html += '<th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>';
+                html += '</tr></thead><tbody>';
+
+                var date = 1;
+                for (var i = 0; i < 6; i++) {
+                    html += '<tr>';
+                    for (var j = 0; j < 7; j++) {
+                        if (i === 0 && j < startingDayOfWeek) {
+                            html += '<td class="calendar-day empty"></td>';
+                        } else if (date > daysInMonth) {
+                            html += '<td class="calendar-day empty"></td>';
+                        } else {
+                            var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(date).padStart(2, '0');
+                            var dayEvents = allEvents.filter(function(e) { return e.date === dateStr; });
+                            var isToday = (date === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear());
+                            
+                            html += '<td class="calendar-day' + (isToday ? ' today' : '') + '">';
+                            html += '<div class="calendar-date">' + date + '</div>';
+                            
+                            if (dayEvents.length > 0) {
+                                html += '<div class="calendar-events">';
+                                dayEvents.slice(0, 3).forEach(function(event) {
+                                    var statusClass = '';
+                                    var statusIcon = '';
+                                    if (event.type === 'request') {
+                                        statusClass = 'request-pending';
+                                        statusIcon = '⏳'; // Hourglass for pending requests
+                                    } else if (event.status === 'Completed') {
+                                        statusClass = 'completed';
+                                        statusIcon = '✓'; // Checkmark for completed
+                                    } else if (event.status === 'Pending') {
+                                        statusClass = 'pending';
+                                        statusIcon = '⏰'; // Clock for pending
+                                    } else if (event.status === 'In Progress') {
+                                        statusClass = 'in-progress';
+                                        statusIcon = '⟳'; // Circular arrow for in progress
+                                    } else if (event.status === 'Cancelled') {
+                                        statusClass = 'cancelled';
+                                        statusIcon = '✗'; // X for cancelled
+                                    } else {
+                                        statusClass = 'assigned';
+                                        statusIcon = '✓'; // Checkmark for assigned/confirmed
+                                    }
+                                    var eventType = event.type === 'request' ? 'Request' : 'Appointment';
+                                    var linkUrl = event.type === 'request' ? '/Requests/Details/' + event.id : '/Appointments/Details/' + event.id;
+                                    html += '<div class="calendar-event ' + statusClass + '" title="' + eventType + ': ' + event.time + ' - ' + event.title + ' (' + event.requestor + ')" data-id="' + event.id + '" data-type="' + event.type + '">';
+                                    html += '<small><span class="status-icon">' + statusIcon + '</span> ' + event.time + ' - ' + event.title.substring(0, 12) + (event.title.length > 12 ? '...' : '') + '</small>';
+                                    html += '</div>';
+                                });
+                                if (dayEvents.length > 3) {
+                                    html += '<div class="calendar-event-more">+' + (dayEvents.length - 3) + ' more</div>';
+                                }
+                                html += '</div>';
+                            }
+                            html += '</td>';
+                            date++;
+                        }
+                    }
+                    html += '</tr>';
+                    if (date > daysInMonth) break;
+                }
+                html += '</tbody></table>';
+                
+                document.getElementById('calendar-container').innerHTML = html;
+                
+                // Add click handlers to appointment and request events
+                document.querySelectorAll('.calendar-event').forEach(function(el) {
+                    el.addEventListener('click', function() {
+                        var eventId = this.getAttribute('data-id');
+                        var eventType = this.getAttribute('data-type');
+                        if (eventType === 'request') {
+                            window.location.href = '/Requests/Details/' + eventId;
+                        } else {
+                            window.location.href = '/Appointments/Details/' + eventId;
+                        }
+                    });
+                    el.style.cursor = 'pointer';
+                });
+            }
+
+            document.getElementById('prevMonth').addEventListener('click', function() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', function() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+
+            // Initial render
+            renderCalendar(currentMonth, currentYear);
+        })();
+    </script>
+    <style>
+        .calendar-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        .calendar-day {
+            height: 120px;
+            vertical-align: top;
+            padding: 5px;
+            position: relative;
+        }
+        .calendar-day.today {
+            background-color: rgba(13, 110, 253, 0.1);
+            border: 2px solid #0d6efd;
+        }
+        .calendar-date {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .calendar-events {
+            font-size: 0.75rem;
+        }
+        .calendar-event {
+            margin-bottom: 2px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .calendar-event .status-icon {
+            font-size: 0.9em;
+            display: inline-block;
+        }
+        .calendar-event.pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .calendar-event.assigned {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+        .calendar-event.in-progress {
+            background-color: #0dcaf0;
+            color: #000;
+        }
+        .calendar-event.completed {
+            background-color: #198754;
+            color: #fff;
+        }
+        .calendar-event.cancelled {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .calendar-event.request-pending {
+            background-color: #fd7e14;
+            color: #fff;
+        }
+        .calendar-event-more {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 2px;
+        }
+        .calendar-day.empty {
+            background-color: #f8f9fa;
+        }
+        [data-theme="dark"] .calendar-day.today {
+            background-color: rgba(13, 110, 253, 0.3);
+        }
+        [data-theme="dark"] .calendar-day.empty {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        [data-theme="dark"] .calendar-table {
+            color: #ffffff;
+        }
+        [data-theme="dark"] .calendar-table td {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+}

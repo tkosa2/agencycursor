@@ -1,0 +1,79 @@
+@page
+@model AgencyCursor.Pages.Appointments.CreateModel
+@{
+    ViewData["Title"] = Model.Request != null ? "Assign Interpreter to Request" : "Schedule Appointment";
+}
+
+<h1>@(Model.Request != null ? "Assign Interpreter to Request" : "Schedule Appointment")</h1>
+@if (Model.Request != null)
+{
+    <p class="text-muted">Request #@Model.Request.Id — @Model.Request.Requestor?.Name — @Model.Request.TypeOfService — @Model.Request.ServiceDateTime.ToString("g")</p>
+}
+
+<form method="post">
+    @if (Model.Request != null)
+    {
+        <input type="hidden" asp-for="Appointment.RequestId" />
+    }
+    <div asp-validation-summary="All" class="text-danger"></div>
+    @if (Model.Request == null)
+    {
+        <div class="mb-2">
+            <label asp-for="Appointment.RequestId" class="form-label">Request <span class="text-muted">(optional - leave empty for admin-created appointment)</span></label>
+            <select asp-for="Appointment.RequestId" class="form-select" asp-items="Model.RequestList">
+                <option value="0">-- Optional: Select Request or Leave Empty for Admin-Created --</option>
+            </select>
+            <span asp-validation-for="Appointment.RequestId" class="text-danger"></span>
+        </div>
+    }
+    <div class="mb-2">
+        <label asp-for="Appointment.InterpreterId" class="form-label">Interpreter <span class="text-danger">*</span></label>
+        <select asp-for="Appointment.InterpreterId" class="form-select" asp-items="Model.InterpreterList">
+            <option value="0">-- Select Interpreter --</option>
+        </select>
+        <span asp-validation-for="Appointment.InterpreterId" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ServiceDateTime" class="form-label">Date and Time <span class="text-danger">*</span></label>
+        <input asp-for="Appointment.ServiceDateTime" class="form-control" type="datetime-local" />
+        <span asp-validation-for="Appointment.ServiceDateTime" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.Location" class="form-label"></label>
+        <select asp-for="Appointment.Location" class="form-select">
+            <option value="In-Person">In-Person</option>
+            <option value="Virtual">Virtual</option>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ServiceDetails" class="form-label"></label>
+        <input asp-for="Appointment.ServiceDetails" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.DurationMinutes" class="form-label"></label>
+        <input asp-for="Appointment.DurationMinutes" class="form-control" type="number" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.ClientEmployeeName" class="form-label"></label>
+        <input asp-for="Appointment.ClientEmployeeName" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.Status" class="form-label"></label>
+        <select asp-for="Appointment.Status" class="form-select">
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Appointment.AdditionalNotes" class="form-label"></label>
+        <textarea asp-for="Appointment.AdditionalNotes" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Appointment</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

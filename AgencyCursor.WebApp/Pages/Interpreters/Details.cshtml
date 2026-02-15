@@ -1,0 +1,48 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Interpreters.DetailsModel
+@{
+    ViewData["Title"] = "Interpreter Details";
+}
+
+<h1>@Model.Interpreter?.Name</h1>
+<dl class="row">
+    <dt class="col-sm-2">Languages</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Languages</dd>
+    <dt class="col-sm-2">Availability</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Availability</dd>
+    <dt class="col-sm-2">Phone</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Phone</dd>
+    <dt class="col-sm-2">Email</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Email</dd>
+    <dt class="col-sm-2">Certification</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Certification</dd>
+    <dt class="col-sm-2">Notes</dt>
+    <dd class="col-sm-10">@Model.Interpreter?.Notes</dd>
+</dl>
+<p>
+    <a asp-page="Edit" asp-route-id="@Model.Interpreter?.Id" class="btn btn-primary">Edit</a>
+    <a asp-page="Index" class="btn btn-secondary">Back to List</a>
+</p>
+
+<h2>Appointments</h2>
+@if (Model.Appointments.Any())
+{
+    <table class="table table-sm">
+        <thead><tr><th>Request</th><th>Date/Time</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var a in Model.Appointments)
+            {
+                <tr>
+                    <td>Request #@a.RequestId</td>
+                    <td>@a.ServiceDateTime.ToString("g")</td>
+                    <td>@a.Status</td>
+                    <td><a asp-page="/Appointments/Details" asp-route-id="@a.Id">View</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No appointments yet.</p>
+}

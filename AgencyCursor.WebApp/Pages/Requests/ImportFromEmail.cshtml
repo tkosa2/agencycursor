@@ -1,0 +1,96 @@
+@page
+@model AgencyCursor.Pages.Requests.ImportFromEmailModel
+@{
+    ViewData["Title"] = "Import Request from Email";
+}
+
+<h1>Import Request from Email</h1>
+<p class="text-muted">Paste a plain-text request email below to extract requestor and request details, then create the request in one step.</p>
+
+@if (!string.IsNullOrEmpty(Model.ParseError))
+{
+    <div class="alert alert-warning">@Model.ParseError</div>
+}
+
+<form method="post" asp-page-handler="Parse" class="mb-4">
+    <div class="mb-2">
+        <label for="EmailPlainText" class="form-label">Request email (plain text)</label>
+        <textarea asp-for="EmailPlainText" class="form-control font-monospace" rows="14" placeholder="Paste the full email content here..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Extract request</button>
+</form>
+
+@if (Model.Extracted != null)
+{
+    <hr class="my-4" />
+    <h2>Extracted details</h2>
+    <p class="text-muted">Review and edit if needed, then click &quot;Create Requestor &amp; Request&quot;.</p>
+
+    <form method="post" asp-page-handler="Create">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mt-2">Requestor</h5>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.RequestorName" class="form-label">Name</label>
+                    <input asp-for="CreateInput.RequestorName" class="form-control" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.Phone" class="form-label">Phone</label>
+                    <input asp-for="CreateInput.Phone" class="form-control" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.Email" class="form-label">Email</label>
+                    <input asp-for="CreateInput.Email" class="form-control" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.Address" class="form-label">Address</label>
+                    <input asp-for="CreateInput.Address" class="form-control" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h5 class="mt-2">Request</h5>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.TypeOfService" class="form-label">Type of service</label>
+                    <select asp-for="CreateInput.TypeOfService" class="form-select">
+                        <option value="">—</option>
+                        <option value="Medical">Medical</option>
+                        <option value="Legal">Legal</option>
+                        <option value="Educational">Educational</option>
+                        <option value="Government">Government</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.Location" class="form-label">Location</label>
+                    <select asp-for="CreateInput.Location" class="form-select">
+                        <option value="">—</option>
+                        <option value="In-Person">In-Person</option>
+                        <option value="Virtual">Virtual</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.ServiceDate" class="form-label">Date of appointment</label>
+                    <input asp-for="CreateInput.ServiceDate" class="form-control" type="date" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.StartTime" class="form-label">Start time</label>
+                    <input asp-for="CreateInput.StartTime" class="form-control" placeholder="e.g. 10:00 AM" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.PreferredInterpreterName" class="form-label">Preferred interpreter (name)</label>
+                    <input asp-for="CreateInput.PreferredInterpreterName" class="form-control" placeholder="Optional; matched by name if interpreter exists" />
+                </div>
+                <div class="mb-2">
+                    <label asp-for="CreateInput.AdditionalNotes" class="form-label">Additional notes</label>
+                    <textarea asp-for="CreateInput.AdditionalNotes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success mt-2">Create Requestor &amp; Request</button>
+        <a asp-page="Index" class="btn btn-secondary mt-2">Cancel</a>
+    </form>
+}
+
+<p class="mt-3">
+    <a asp-page="/Requests/Index">Back to Requests</a>
+</p>

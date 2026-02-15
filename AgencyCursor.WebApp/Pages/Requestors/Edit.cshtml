@@ -1,0 +1,39 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Requestors.EditModel
+@{
+    ViewData["Title"] = "Edit Requestor";
+}
+
+<h1>Edit Requestor</h1>
+
+<form method="post">
+    <input type="hidden" asp-for="Requestor.Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-2">
+        <label asp-for="Requestor.Name" class="form-label"></label>
+        <input asp-for="Requestor.Name" class="form-control" />
+        <span asp-validation-for="Requestor.Name" class="text-danger"></span>
+    </div>
+    <div class="mb-2">
+        <label asp-for="Requestor.Phone" class="form-label"></label>
+        <input asp-for="Requestor.Phone" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Requestor.Email" class="form-label"></label>
+        <input asp-for="Requestor.Email" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Requestor.Address" class="form-label"></label>
+        <input asp-for="Requestor.Address" class="form-control" />
+    </div>
+    <div class="mb-2">
+        <label asp-for="Requestor.Notes" class="form-label"></label>
+        <textarea asp-for="Requestor.Notes" class="form-control" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

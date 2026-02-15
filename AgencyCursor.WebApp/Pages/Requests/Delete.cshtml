@@ -1,0 +1,20 @@
+@page "{id:int}"
+@model AgencyCursor.Pages.Requests.DeleteModel
+@{
+    ViewData["Title"] = "Delete Request";
+}
+
+<h1>Delete Request</h1>
+<p class="text-danger">Are you sure you want to delete this request?</p>
+<dl class="row">
+    <dt class="col-sm-2">Requestor</dt>
+    <dd class="col-sm-10">@Model.Request?.Requestor?.Name</dd>
+    <dt class="col-sm-2">Type</dt>
+    <dd class="col-sm-10">@Model.Request?.TypeOfService</dd>
+    <dt class="col-sm-2">Date/Time</dt>
+    <dd class="col-sm-10">@Model.Request?.ServiceDateTime.ToString("g")</dd>
+</dl>
+<form method="post" asp-route-id="@Model.Request?.Id">
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-page="Index" class="btn btn-secondary">Cancel</a>
+</form>

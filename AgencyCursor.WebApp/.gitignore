@@ -1,0 +1,17 @@
+# Build
+bin/
+obj/
+*.user
+*.db
+*.db-shm
+*.db-wal
+
+# Visual Studio
+.vs/
+*.csproj.user
+
+# Rider
+.idea/
+
+# User-specific
+appsettings.*.local.json
