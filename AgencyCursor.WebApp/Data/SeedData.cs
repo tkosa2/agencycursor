@@ -5,7 +5,7 @@ namespace AgencyCursor.Data;
 
 public static class SeedData
 {
-    public static async Task EnsureSeedDataAsync(AgencyDbContext db)
+    public static async Task EnsureSeedDataAsync(AgencyDbContext db, string? contentRootPath = null)
     {
         // Always ensure admin requestor exists
         await EnsureAdminRequestorAsync(db);
@@ -25,13 +25,19 @@ public static class SeedData
             Console.WriteLine($"Created {requestors.Count} requestors.");
 
             // Import interpreters from RID database
-            var ridDbPath = Path.Combine(Directory.GetCurrentDirectory(), "rid_interpreters.db");
+            // Use ContentRootPath if provided, otherwise fall back to current directory
+            var basePath = contentRootPath ?? Directory.GetCurrentDirectory();
+            var ridDbPath = RidDbHelper.GetRidDbPath(basePath);
             if (File.Exists(ridDbPath))
             {
                 await RidInterpreterImporter.ImportInterpretersAsync(db, ridDbPath);
                 
                 // Register first 10 Washington state interpreters
                 await InterpreterRegistration.RegisterWashingtonInterpretersAsync(db, ridDbPath);
+            }
+            else
+            {
+                Console.WriteLine($"RID interpreters database not found at {ridDbPath}");
             }
 
             // Get all interpreters for generating requests

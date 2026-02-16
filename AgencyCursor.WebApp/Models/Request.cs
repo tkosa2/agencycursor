@@ -59,6 +59,9 @@ public class Request
     [Display(Name = "Preferred Interpreter Name"), StringLength(200)]
     public string? PreferredInterpreterName { get; set; }
 
+    [Display(Name = "Client Names"), StringLength(1000)]
+    public string? ClientNames { get; set; }
+
     [Display(Name = "Specializations"), StringLength(500)]
     public string? Specializations { get; set; }
 

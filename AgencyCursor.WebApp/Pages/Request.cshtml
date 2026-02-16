@@ -28,7 +28,7 @@
                         <label asp-for="Request.RequestName" class="form-label">
                             Request Name <span class="text-danger">*</span>
                         </label>
-                        <input asp-for="Request.RequestName" id="request-name" class="form-control" placeholder="Client/Requestor name" required />
+                        <input asp-for="Request.RequestName" id="request-name" class="form-control" placeholder="Request name" required />
                         <span asp-validation-for="Request.RequestName" class="text-danger"></span>
                     </div>
                     <div class="mb-3">
@@ -60,7 +60,7 @@
                     <legend class="h5 mb-3">2. Contact Information</legend>
                     <div class="mb-3">
                         <label asp-for="RequestorPhone" class="form-label">
-                            Phone Number <span class="text-muted">(for urgent communication, such as delays)</span> <span class="text-danger">*</span>
+                            Phone Number <span class="text-muted">(for updates)</span> <span class="text-danger">*</span>
                         </label>
                         <input asp-for="RequestorPhone" class="form-control" type="tel" required />
                         <span asp-validation-for="RequestorPhone" class="text-danger"></span>
@@ -226,6 +226,13 @@
                         <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
                     </div>
                     <div class="mb-3">
+                        <label asp-for="Request.ClientNames" class="form-label">
+                            Client Name(s) <span class="text-muted">(optional)</span>
+                        </label>
+                        <textarea asp-for="Request.ClientNames" class="form-control" rows="3" placeholder="Enter one or more client first and last names (one per line or separated by commas)"></textarea>
+                        <small class="form-text text-muted">Example: John Smith, Jane Doe or enter one per line</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Specialization</label>
                         <p class="text-muted mb-2">Please select any that apply:</p>
                         <div>
@@ -242,8 +249,12 @@
                                 <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile" id="spec-tactile" />
-                                <label class="form-check-label" for="spec-tactile">Tactile</label>
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind" id="spec-deafblind" />
+                                <label class="form-check-label" for="spec-deafblind">Deaf-Blind</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Spanish" id="spec-spanish" />
+                                <label class="form-check-label" for="spec-spanish">Spanish Sign Language</label>
                             </div>
                         </div>
                     </div>

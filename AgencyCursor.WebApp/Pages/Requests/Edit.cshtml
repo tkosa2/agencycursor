@@ -72,6 +72,11 @@
         <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
     </div>
     <div class="mb-2">
+        <label asp-for="Request.ClientNames" class="form-label">Client Name(s)</label>
+        <textarea asp-for="Request.ClientNames" class="form-control" rows="3" placeholder="Enter one or more client first and last names (one per line or separated by commas)"></textarea>
+        <small class="form-text text-muted">Example: John Smith, Jane Doe or enter one per line</small>
+    </div>
+    <div class="mb-2">
         <label class="form-label">Mode of Interpretation</label>
         <div>
             <div class="form-check form-check-inline">
