@@ -28,12 +28,27 @@
             <input type="text" id="requestor-search" class="form-control" placeholder="Type to search by name, email, or phone..." autocomplete="off" />
             <div id="requestor-suggestions" class="list-group" style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; width: 100%; margin-top: 2px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>
         </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label asp-for="RequestorFirstName" class="form-label">
+                    First Name <span class="text-danger">*</span>
+                </label>
+                <input asp-for="RequestorFirstName" id="requestor-first-name" class="form-control" placeholder="First name" required />
+                <span asp-validation-for="RequestorFirstName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="RequestorLastName" class="form-label">
+                    Last Name <span class="text-danger">*</span>
+                </label>
+                <input asp-for="RequestorLastName" id="requestor-last-name" class="form-control" placeholder="Last name" required />
+                <span asp-validation-for="RequestorLastName" class="text-danger"></span>
+            </div>
+        </div>
         <div class="mb-3">
-            <label asp-for="Request.RequestName" class="form-label">
-                Request Name <span class="text-danger">*</span>
+            <label for="request-name" class="form-label">
+                Full Name <span class="text-muted">(auto-filled)</span>
             </label>
-            <input asp-for="Request.RequestName" id="request-name" class="form-control" placeholder="Client/Requestor name" required />
-            <span asp-validation-for="Request.RequestName" class="text-danger"></span>
+            <input type="text" id="request-name" class="form-control" readonly />
         </div>
         <div class="mb-3">
             <label asp-for="Request.NumberOfIndividuals" class="form-label">
@@ -318,10 +333,31 @@
                 });
             }
 
+            // Auto-fill full name from first and last name
+            var requestorFirstNameInput = document.getElementById('requestor-first-name');
+            var requestorLastNameInput = document.getElementById('requestor-last-name');
+            var requestNameInput = document.getElementById('request-name');
+            
+            function updateFullName() {
+                var firstName = requestorFirstNameInput ? requestorFirstNameInput.value.trim() : '';
+                var lastName = requestorLastNameInput ? requestorLastNameInput.value.trim() : '';
+                var fullName = (firstName + ' ' + lastName).trim();
+                if (requestNameInput) {
+                    requestNameInput.value = fullName;
+                }
+            }
+            
+            if (requestorFirstNameInput) {
+                requestorFirstNameInput.addEventListener('input', updateFullName);
+            }
+            if (requestorLastNameInput) {
+                requestorLastNameInput.addEventListener('input', updateFullName);
+            }
+            updateFullName();
+
             // Requestor autocomplete
             var requestorSearch = document.getElementById('requestor-search');
             var requestorSuggestions = document.getElementById('requestor-suggestions');
-            var requestNameInput = document.getElementById('request-name');
             var requestorPhoneInput = document.getElementById('RequestorPhone');
             var requestorEmailInput = document.getElementById('RequestorEmail');
             var searchTimeout;
@@ -358,7 +394,13 @@
                                         '</small>';
                                     item.addEventListener('click', function(e) {
                                         e.preventDefault();
-                                        requestNameInput.value = requestor.name;
+                                        // Split name into first and last
+                                        var nameParts = requestor.name.split(' ');
+                                        var firstName = nameParts[0] || '';
+                                        var lastName = nameParts.slice(1).join(' ') || '';
+                                        if (requestorFirstNameInput) requestorFirstNameInput.value = firstName;
+                                        if (requestorLastNameInput) requestorLastNameInput.value = lastName;
+                                        updateFullName();
                                         if (requestorPhoneInput) requestorPhoneInput.value = requestor.phone || '';
                                         if (requestorEmailInput) requestorEmailInput.value = requestor.email || '';
                                         requestorSearch.value = requestor.name;

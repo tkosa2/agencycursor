@@ -35,22 +35,35 @@ public static class InterpreterMigrator
                     existingColumns.Add(reader.GetString(1));
                 }
 
-                // Add IsRegisteredWithAgency column if it doesn't exist
-                if (!existingColumns.Contains("IsRegisteredWithAgency"))
+                // Add columns if they don't exist
+                var columnsToAdd = new Dictionary<string, string>
                 {
-                    try
+                    { "IsRegisteredWithAgency", "INTEGER NOT NULL DEFAULT 0" },
+                    { "AddressLine1", "TEXT" },
+                    { "AddressLine2", "TEXT" },
+                    { "City", "TEXT" },
+                    { "State", "TEXT" },
+                    { "ZipCode", "TEXT" }
+                };
+
+                foreach (var column in columnsToAdd)
+                {
+                    if (!existingColumns.Contains(column.Key))
                     {
-                        using var alterCommand = connection.CreateCommand();
-                        alterCommand.CommandText = @"
-                            ALTER TABLE ""Interpreters"" 
-                            ADD COLUMN ""IsRegisteredWithAgency"" INTEGER NOT NULL DEFAULT 0;
-                        ";
-                        await alterCommand.ExecuteNonQueryAsync();
-                        Console.WriteLine("Added column IsRegisteredWithAgency to Interpreters table.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Warning: Could not add column IsRegisteredWithAgency: {ex.Message}");
+                        try
+                        {
+                            using var alterCommand = connection.CreateCommand();
+                            alterCommand.CommandText = $@"
+                                ALTER TABLE ""Interpreters"" 
+                                ADD COLUMN ""{column.Key}"" {column.Value};
+                            ";
+                            await alterCommand.ExecuteNonQueryAsync();
+                            Console.WriteLine($"Added column {column.Key} to Interpreters table.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Warning: Could not add column {column.Key}: {ex.Message}");
+                        }
                     }
                 }
             }

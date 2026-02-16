@@ -6,6 +6,13 @@
 
 <h1>@Model.Requestor?.Name</h1>
 <dl class="row">
+    @if (!string.IsNullOrWhiteSpace(Model.Requestor?.FirstName) || !string.IsNullOrWhiteSpace(Model.Requestor?.LastName))
+    {
+        <dt class="col-sm-2">First Name</dt>
+        <dd class="col-sm-10">@Model.Requestor?.FirstName</dd>
+        <dt class="col-sm-2">Last Name</dt>
+        <dd class="col-sm-10">@Model.Requestor?.LastName</dd>
+    }
     <dt class="col-sm-2">Phone</dt>
     <dd class="col-sm-10">@Model.Requestor?.Phone</dd>
     <dt class="col-sm-2">Email</dt>

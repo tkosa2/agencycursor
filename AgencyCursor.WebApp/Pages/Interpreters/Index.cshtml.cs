@@ -139,4 +139,51 @@ public class IndexModel : PageModel
             return RedirectToPage();
         }
     }
+
+    [BindProperty(SupportsGet = true)]
+    public string? BulkState { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? BulkCity { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public int? BulkLimit { get; set; }
+
+    public async Task<IActionResult> OnPostBulkRegisterAsync(string? state, string? city, int? limit)
+    {
+        try
+        {
+            var ridDbPath = Path.Combine(_environment.ContentRootPath, "rid_interpreters.db");
+            if (!System.IO.File.Exists(ridDbPath))
+            {
+                TempData["ErrorMessage"] = "RID database not found.";
+                return RedirectToPage(new { registeredOnly = true });
+            }
+
+            var result = await InterpreterRegistrationService.SearchAndRegisterInterpretersAsync(
+                _db,
+                ridDbPath,
+                limit: limit,
+                state: state,
+                city: city
+            );
+
+            if (result.Success)
+            {
+                var message = $"Bulk registration completed: {result.Created} created, {result.Registered} registered, {result.AlreadyRegistered} already registered, {result.Skipped} skipped, {result.Errors} errors.";
+                TempData["SuccessMessage"] = message;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Bulk registration failed.";
+            }
+
+            return RedirectToPage(new { registeredOnly = true });
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error during bulk registration: {ex.Message}";
+            return RedirectToPage(new { registeredOnly = true });
+        }
+    }
 }

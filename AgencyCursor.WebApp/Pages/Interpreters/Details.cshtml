@@ -14,6 +14,39 @@
     <dd class="col-sm-10">@Model.Interpreter?.Phone</dd>
     <dt class="col-sm-2">Email</dt>
     <dd class="col-sm-10">@Model.Interpreter?.Email</dd>
+    @if (!string.IsNullOrWhiteSpace(Model.Interpreter?.AddressLine1) || !string.IsNullOrWhiteSpace(Model.Interpreter?.City))
+    {
+        <dt class="col-sm-2">Address</dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrWhiteSpace(Model.Interpreter?.AddressLine1))
+            {
+                <div>@Model.Interpreter.AddressLine1</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Interpreter?.AddressLine2))
+            {
+                <div>@Model.Interpreter.AddressLine2</div>
+            }
+            @{
+                var addressParts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(Model.Interpreter?.City))
+                {
+                    addressParts.Add(Model.Interpreter.City);
+                }
+                if (!string.IsNullOrWhiteSpace(Model.Interpreter?.State))
+                {
+                    addressParts.Add(Model.Interpreter.State);
+                }
+                if (!string.IsNullOrWhiteSpace(Model.Interpreter?.ZipCode))
+                {
+                    addressParts.Add(Model.Interpreter.ZipCode);
+                }
+                if (addressParts.Any())
+                {
+                    <div>@string.Join(", ", addressParts)</div>
+                }
+            }
+        </dd>
+    }
     <dt class="col-sm-2">Certification</dt>
     <dd class="col-sm-10">@Model.Interpreter?.Certification</dd>
     <dt class="col-sm-2">Notes</dt>

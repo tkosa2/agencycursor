@@ -1,0 +1,78 @@
+@page
+@model AgencyCursor.Pages.ZipCodesModel
+@{
+    ViewData["Title"] = "ZIP Codes Data";
+}
+
+<h1>ZIP Codes Data</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Top 10 ZIP Codes</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopZipCodes.Count > 0)
+                {
+                    <table class="table table-sm table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Postal Code</th>
+                                <th>Place Name</th>
+                                <th>State</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var zipCode in Model.TopZipCodes)
+                            {
+                                <tr>
+                                    <td>@zipCode.PostalCode</td>
+                                    <td>@zipCode.PlaceName</td>
+                                    <td>@zipCode.AdminCode1</td>
+                                    <td>@zipCode.Latitude?.ToString("F4")</td>
+                                    <td>@zipCode.Longitude?.ToString("F4")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">No ZIP codes found.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Distinct States (@Model.DistinctStates.Count)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.DistinctStates.Count > 0)
+                {
+                    <div class="list-group">
+                        @foreach (var state in Model.DistinctStates)
+                        {
+                            <a href="#" class="list-group-item list-group-item-action">
+                                @state
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No states found.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="/" class="btn btn-secondary">Back to Home</a>
+</div>

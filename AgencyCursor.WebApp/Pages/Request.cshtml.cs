@@ -17,6 +17,14 @@ public class RequestModel : PageModel
     [BindProperty]
     public Models.Request Request { get; set; } = null!;
 
+    [BindProperty, Required(ErrorMessage = "First name is required.")]
+    [StringLength(100)]
+    public string RequestorFirstName { get; set; } = string.Empty;
+
+    [BindProperty, Required(ErrorMessage = "Last name is required.")]
+    [StringLength(100)]
+    public string RequestorLastName { get; set; } = string.Empty;
+
     [BindProperty, Required(ErrorMessage = "Phone number is required.")]
     [Phone]
     public string RequestorPhone { get; set; } = string.Empty;
@@ -71,7 +79,6 @@ public class RequestModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         // Clear ModelState errors for Request object to add our own validation
-        ModelState.Remove("Request.RequestName");
         ModelState.Remove("Request.ServiceDateTime");
         ModelState.Remove("Request.TypeOfService");
         ModelState.Remove("Request.Mode");
@@ -80,11 +87,23 @@ public class RequestModel : PageModel
         // Validate required fields explicitly
         bool hasErrors = false;
 
-        if (string.IsNullOrWhiteSpace(Request.RequestName))
+        if (string.IsNullOrWhiteSpace(RequestorFirstName))
         {
-            ModelState.AddModelError("Request.RequestName", "Request name is required.");
+            ModelState.AddModelError("RequestorFirstName", "First name is required.");
             hasErrors = true;
         }
+
+        if (string.IsNullOrWhiteSpace(RequestorLastName))
+        {
+            ModelState.AddModelError("RequestorLastName", "Last name is required.");
+            hasErrors = true;
+        }
+
+        // Combine first and last name for RequestName
+        Request.RequestName = $"{RequestorFirstName?.Trim()} {RequestorLastName?.Trim()}".Trim();
+        // Store separately as well
+        Request.FirstName = RequestorFirstName?.Trim();
+        Request.LastName = RequestorLastName?.Trim();
 
         if (AppointmentDate == default(DateTime) || AppointmentDate < DateTime.Now.AddYears(-10))
         {
@@ -151,7 +170,9 @@ public class RequestModel : PageModel
         // Always create a new requestor for public submissions
         var requestor = new Requestor
         {
-            Name = Request.RequestName ?? "Unknown",
+            Name = Request.RequestName ?? $"{RequestorFirstName} {RequestorLastName}".Trim() ?? "Unknown",
+            FirstName = RequestorFirstName?.Trim(),
+            LastName = RequestorLastName?.Trim(),
             Phone = RequestorPhone,
             Email = RequestorEmail,
             Address = BuildAddressString()

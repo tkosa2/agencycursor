@@ -467,3 +467,4 @@ F:\projects\agencycursor\AgencyCursor.Tests\obj\Debug\net8.0\refint\AgencyCursor
 F:\projects\agencycursor\AgencyCursor.Tests\obj\Debug\net8.0\AgencyCursor.Tests.pdb
 F:\projects\agencycursor\AgencyCursor.Tests\obj\Debug\net8.0\AgencyCursor.Tests.genruntimeconfig.cache
 F:\projects\agencycursor\AgencyCursor.Tests\obj\Debug\net8.0\ref\AgencyCursor.Tests.dll
+F:\projects\agencycursor\AgencyCursor.Tests\obj\Debug\net8.0\AgencyCursor.Tests.sourcelink.json

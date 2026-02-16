@@ -24,12 +24,21 @@
                 <!-- 1. Requestor Information -->
                 <fieldset class="mb-4">
                     <legend class="h5 mb-3">1. Requestor Information</legend>
-                    <div class="mb-3">
-                        <label asp-for="Request.RequestName" class="form-label">
-                            Request Name <span class="text-danger">*</span>
-                        </label>
-                        <input asp-for="Request.RequestName" id="request-name" class="form-control" placeholder="Client/Requestor name" required />
-                        <span asp-validation-for="Request.RequestName" class="text-danger"></span>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RequestorFirstName" class="form-label">
+                                First Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RequestorFirstName" id="requestor-first-name" class="form-control" placeholder="First name" required />
+                            <span asp-validation-for="RequestorFirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="RequestorLastName" class="form-label">
+                                Last Name <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RequestorLastName" id="requestor-last-name" class="form-control" placeholder="Last name" required />
+                            <span asp-validation-for="RequestorLastName" class="text-danger"></span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label asp-for="Request.NumberOfIndividuals" class="form-label">
@@ -288,7 +297,8 @@
             }
 
             // Clear errors for all form fields
-            clearFieldError('Request.RequestName');
+            clearFieldError('RequestorFirstName');
+            clearFieldError('RequestorLastName');
             clearFieldError('AppointmentDate');
             clearFieldError('RequestorPhone');
             clearFieldError('RequestorEmail');
@@ -410,7 +420,8 @@
             }
 
             // Clear errors for all form fields
-            clearFieldError('Request.RequestName');
+            clearFieldError('RequestorFirstName');
+            clearFieldError('RequestorLastName');
             clearFieldError('AppointmentDate');
             clearFieldError('RequestorPhone');
             clearFieldError('RequestorEmail');

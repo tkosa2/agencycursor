@@ -15,6 +15,12 @@ public class Request
     [Display(Name = "Request Name"), StringLength(200)]
     public string? RequestName { get; set; }
 
+    [Display(Name = "First Name"), StringLength(100)]
+    public string? FirstName { get; set; }
+
+    [Display(Name = "Last Name"), StringLength(100)]
+    public string? LastName { get; set; }
+
     [Display(Name = "Number of Individuals")]
     public int NumberOfIndividuals { get; set; } = 1;
 

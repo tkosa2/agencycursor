@@ -9,9 +9,21 @@
 <form method="post">
     <input type="hidden" asp-for="Requestor.Id" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-md-6 mb-2">
+            <label asp-for="Requestor.FirstName" class="form-label">First Name</label>
+            <input asp-for="Requestor.FirstName" class="form-control" />
+            <span asp-validation-for="Requestor.FirstName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-2">
+            <label asp-for="Requestor.LastName" class="form-label">Last Name</label>
+            <input asp-for="Requestor.LastName" class="form-control" />
+            <span asp-validation-for="Requestor.LastName" class="text-danger"></span>
+        </div>
+    </div>
     <div class="mb-2">
-        <label asp-for="Requestor.Name" class="form-label"></label>
-        <input asp-for="Requestor.Name" class="form-control" />
+        <label asp-for="Requestor.Name" class="form-label">Full Name <span class="text-muted small">(auto-filled from first and last name)</span></label>
+        <input asp-for="Requestor.Name" class="form-control" readonly />
         <span asp-validation-for="Requestor.Name" class="text-danger"></span>
     </div>
     <div class="mb-2">
@@ -36,4 +48,27 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            var firstNameInput = document.querySelector('input[name="Requestor.FirstName"]');
+            var lastNameInput = document.querySelector('input[name="Requestor.LastName"]');
+            var nameInput = document.querySelector('input[name="Requestor.Name"]');
+            
+            function updateFullName() {
+                var firstName = firstNameInput ? firstNameInput.value.trim() : '';
+                var lastName = lastNameInput ? lastNameInput.value.trim() : '';
+                var fullName = (firstName + ' ' + lastName).trim();
+                if (nameInput) {
+                    nameInput.value = fullName;
+                }
+            }
+            
+            if (firstNameInput) {
+                firstNameInput.addEventListener('input', updateFullName);
+            }
+            if (lastNameInput) {
+                lastNameInput.addEventListener('input', updateFullName);
+            }
+        })();
+    </script>
 }

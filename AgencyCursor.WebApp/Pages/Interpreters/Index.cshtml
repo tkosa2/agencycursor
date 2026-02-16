@@ -195,6 +195,36 @@ else
 {
     <hr />
     <h2>Registered Interpreters</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Bulk Register from RID Database</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Search and register interpreters from the external RID interpreter registry database.</p>
+            <form method="post" asp-page-handler="BulkRegister" class="row g-3">
+                <div class="col-md-3">
+                    <label for="bulkState" class="form-label">State (optional)</label>
+                    <input type="text" class="form-control" id="bulkState" name="state" placeholder="e.g., WA" />
+                </div>
+                <div class="col-md-3">
+                    <label for="bulkCity" class="form-label">City (optional)</label>
+                    <input type="text" class="form-control" id="bulkCity" name="city" placeholder="e.g., Seattle" />
+                </div>
+                <div class="col-md-3">
+                    <label for="bulkLimit" class="form-label">Limit (optional)</label>
+                    <input type="number" class="form-control" id="bulkLimit" name="limit" placeholder="e.g., 100" min="1" max="10000" />
+                    <small class="form-text text-muted">Leave empty for default (10000)</small>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100" onclick="return confirm('This will search and register interpreters from the RID database. This may take a while. Continue?');">
+                        <i class="bi bi-download"></i> Bulk Register
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     @if (Model.RegisteredInterpreters.Any())
     {
         <p class="text-muted">Found @Model.RegisteredInterpreters.Count registered interpreter(s)</p>

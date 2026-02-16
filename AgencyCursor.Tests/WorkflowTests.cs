@@ -25,8 +25,11 @@ public class WorkflowTests : IClassFixture<PlaywrightFixture>
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Fill in Requestor Information
-            var requestorName = $"Test Requestor {DateTime.Now.Ticks}";
-            await page.FillAsync("input[name='Request.RequestName']", requestorName);
+            var requestorFirstName = $"Test";
+            var requestorLastName = $"Requestor{DateTime.Now.Ticks}";
+            var requestorName = $"{requestorFirstName} {requestorLastName}";
+            await page.FillAsync("input[name='RequestorFirstName']", requestorFirstName);
+            await page.FillAsync("input[name='RequestorLastName']", requestorLastName);
             await page.FillAsync("input[name='Request.NumberOfIndividuals']", "1");
             await page.CheckAsync("input[value='deaf']");
 
@@ -91,8 +94,14 @@ public class WorkflowTests : IClassFixture<PlaywrightFixture>
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Fill in request form
-            var requestorName = $"Workflow Test {DateTime.Now.Ticks}";
-            await page.FillAsync("input[name='Request.RequestName']", requestorName);
+            var requestorFirstName = "Workflow";
+            var requestorLastName = $"Test{DateTime.Now.Ticks}";
+            var requestorName = $"{requestorFirstName} {requestorLastName}";
+            
+            // Wait for the first name field to be visible
+            await page.WaitForSelectorAsync("input[name='RequestorFirstName']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible, Timeout = 10000 });
+            await page.FillAsync("input[name='RequestorFirstName']", requestorFirstName);
+            await page.FillAsync("input[name='RequestorLastName']", requestorLastName);
             await page.FillAsync("input[name='Request.NumberOfIndividuals']", "1");
             await page.CheckAsync("input[value='deaf']");
             await page.FillAsync("input[name='RequestorPhone']", "+1 (555) 999-8888");

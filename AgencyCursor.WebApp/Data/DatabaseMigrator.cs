@@ -41,6 +41,8 @@ public static class DatabaseMigrator
                 var columnsToAdd = new Dictionary<string, string>
                 {
                     { "RequestName", "TEXT" },
+                    { "FirstName", "TEXT" },
+                    { "LastName", "TEXT" },
                     { "NumberOfIndividuals", "INTEGER NOT NULL DEFAULT 1" },
                     { "IndividualType", "TEXT" },
                     { "TypeOfServiceOther", "TEXT" },
@@ -86,6 +88,75 @@ public static class DatabaseMigrator
         catch (Exception ex)
         {
             Console.WriteLine($"Warning: Could not migrate Requests table: {ex.Message}");
+        }
+    }
+
+    public static async Task MigrateRequestorsTableAsync(AgencyDbContext db)
+    {
+        try
+        {
+            var connection = db.Database.GetDbConnection();
+            await connection.OpenAsync();
+            try
+            {
+                using var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = @"
+                    SELECT name FROM sqlite_master 
+                    WHERE type='table' AND name='Requestors';
+                ";
+                var tableExists = await checkCommand.ExecuteScalarAsync() != null;
+
+                if (!tableExists)
+                {
+                    return;
+                }
+
+                // Get existing columns
+                var existingColumns = new List<string>();
+                using var pragmaCommand = connection.CreateCommand();
+                pragmaCommand.CommandText = "PRAGMA table_info(Requestors);";
+                using var reader = await pragmaCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    existingColumns.Add(reader.GetString(1));
+                }
+
+                // Add missing columns
+                var columnsToAdd = new Dictionary<string, string>
+                {
+                    { "FirstName", "TEXT" },
+                    { "LastName", "TEXT" }
+                };
+
+                foreach (var column in columnsToAdd)
+                {
+                    if (!existingColumns.Contains(column.Key))
+                    {
+                        try
+                        {
+                            using var alterCommand = connection.CreateCommand();
+                            alterCommand.CommandText = $@"
+                                ALTER TABLE ""Requestors"" 
+                                ADD COLUMN ""{column.Key}"" {column.Value};
+                            ";
+                            await alterCommand.ExecuteNonQueryAsync();
+                            Console.WriteLine($"Added column {column.Key} to Requestors table.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Warning: Could not add column {column.Key}: {ex.Message}");
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Could not migrate Requestors table: {ex.Message}");
         }
     }
 }

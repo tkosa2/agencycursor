@@ -40,6 +40,12 @@ public class CreateModel : PageModel
     [BindProperty]
     public string[]? Specializations { get; set; }
 
+    [BindProperty]
+    public string RequestorFirstName { get; set; } = string.Empty;
+
+    [BindProperty]
+    public string RequestorLastName { get; set; } = string.Empty;
+
     public SelectList RequestorList { get; set; } = null!;
     public SelectList InterpreterList { get; set; } = null!;
     public SelectList StateList { get; set; } = null!;
@@ -77,6 +83,7 @@ public class CreateModel : PageModel
         // Remove RequestorId validation since we'll set it after creating/finding the requestor
         ModelState.Remove("Request.RequestorId");
         ModelState.Remove("Request.Requestor");
+        ModelState.Remove("Request.RequestName"); // Auto-generated from FirstName and LastName
         
         // Get unique states from ZipCode table
         var states = await _db.ZipCodes
@@ -105,12 +112,19 @@ public class CreateModel : PageModel
         var requestor = await _db.Requestors
             .FirstOrDefaultAsync(r => r.Email == RequestorEmail || r.Phone == RequestorPhone);
 
+        // Combine first and last name
+        var fullName = string.IsNullOrWhiteSpace(RequestorFirstName) && string.IsNullOrWhiteSpace(RequestorLastName)
+            ? "Unknown"
+            : $"{RequestorFirstName} {RequestorLastName}".Trim();
+
         if (requestor == null)
         {
             // Create new requestor
             requestor = new Requestor
             {
-                Name = Request.RequestName ?? "Unknown",
+                FirstName = RequestorFirstName,
+                LastName = RequestorLastName,
+                Name = fullName,
                 Phone = RequestorPhone,
                 Email = RequestorEmail,
                 Address = BuildAddressString()
@@ -127,7 +141,19 @@ public class CreateModel : PageModel
                 requestor.Email = RequestorEmail;
             if (string.IsNullOrEmpty(requestor.Address))
                 requestor.Address = BuildAddressString();
+            // Update name fields if not set
+            if (string.IsNullOrEmpty(requestor.FirstName) && !string.IsNullOrEmpty(RequestorFirstName))
+                requestor.FirstName = RequestorFirstName;
+            if (string.IsNullOrEmpty(requestor.LastName) && !string.IsNullOrEmpty(RequestorLastName))
+                requestor.LastName = RequestorLastName;
+            if (string.IsNullOrEmpty(requestor.Name) || requestor.Name == "Unknown")
+                requestor.Name = fullName;
         }
+
+        // Set Request name fields
+        Request.FirstName = RequestorFirstName;
+        Request.LastName = RequestorLastName;
+        Request.RequestName = fullName;
 
         Request.RequestorId = requestor.Id;
 

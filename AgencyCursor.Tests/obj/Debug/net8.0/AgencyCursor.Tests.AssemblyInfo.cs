@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AgencyCursor.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6893f1e913c818e7cb3db8552f14cf59820c7d6a")]
 [assembly: System.Reflection.AssemblyProductAttribute("AgencyCursor.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AgencyCursor.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -19,6 +19,9 @@ using (var scope = app.Services.CreateScope())
     // Migrate Requests table to add new columns
     DatabaseMigrator.MigrateRequestsTableAsync(db).GetAwaiter().GetResult();
     
+    // Migrate Requestors table to add FirstName and LastName columns
+    DatabaseMigrator.MigrateRequestorsTableAsync(db).GetAwaiter().GetResult();
+    
     // Migrate Interpreters table to add IsRegisteredWithAgency column
     InterpreterMigrator.MigrateInterpretersTableAsync(db).GetAwaiter().GetResult();
     
