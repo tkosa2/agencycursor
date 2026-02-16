@@ -4,14 +4,16 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded-3 shadow">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h1 class="display-4 fw-bold mb-3">Professional Interpreting Services</h1>
-                <p class="lead mb-4">Connecting communities through quality sign language and DeafBlind interpreting services.</p>
-                <a asp-page="/Request" class="btn btn-light btn-lg me-2">Request an Interpreter</a>
-                <a asp-page="/Contact" class="btn btn-outline-light btn-lg">Contact Us</a>
+                <p class="lead mb-4">Connecting the Deaf and DeafBlind community with qualified interpreters. We provide specialized interpreting services with passion and sensitivity to ensure effective communication and accessibility.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-page="/Request" class="btn btn-warning btn-lg fw-bold px-4">Request an Interpreter</a>
+                    <a asp-page="/Contact" class="btn btn-outline-light btn-lg px-4">Contact Us</a>
+                </div>
             </div>
         </div>
     </div>
@@ -19,83 +21,95 @@
 
 <div class="container">
     <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="display-1 mb-3">👋</div>
-                    <h3 class="card-title">Sign Language Interpreting</h3>
-                    <p class="card-text">Professional ASL interpreters for meetings, appointments, and events.</p>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fs-1">👋</span>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold mb-3">Sign Language Interpreting</h3>
+                    <p class="card-text text-muted">Professional ASL interpreters for meetings, appointments, and events. Certified interpreters with specialized knowledge in medical, legal, and educational settings.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="display-1 mb-3">🤝</div>
-                    <h3 class="card-title">DeafBlind Interpreting</h3>
-                    <p class="card-text">Specialized interpreting services for DeafBlind individuals.</p>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fs-1">🤝</span>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold mb-3">DeafBlind Interpreting</h3>
+                    <p class="card-text text-muted">Specialized interpreting services for DeafBlind individuals, including Protactile and Haptic communication methods. Certified Deaf Interpreters (CDI) available.</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="display-1 mb-3">📅</div>
-                    <h3 class="card-title">Flexible Scheduling</h3>
-                    <p class="card-text">Available for in-person and virtual appointments.</p>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <span class="fs-1">📅</span>
+                        </div>
+                    </div>
+                    <h3 class="card-title fw-bold mb-3">Flexible Scheduling</h3>
+                    <p class="card-text text-muted">Available for in-person and virtual appointments. We work around your schedule to provide timely and reliable interpreting services.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <h2 class="text-center mb-4">How It Works</h2>
-            <div class="list-group">
-                <div class="list-group-item border-0 shadow-sm mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <span class="fw-bold">1</span>
-                            </div>
+    <div class="row mb-5">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+                <p class="lead text-muted">Simple steps to get the interpreting services you need</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            <span class="fw-bold">1</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h5 class="mb-1">Submit Your Request</h5>
-                            <p class="mb-0">Fill out our simple request form with your appointment details and requirements.</p>
-                        </div>
+                        <h4 class="fw-bold mb-3">Submit Your Request</h4>
+                        <p class="text-muted">Fill out our simple request form with your appointment details, location, and specific requirements.</p>
                     </div>
                 </div>
-                <div class="list-group-item border-0 shadow-sm mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <span class="fw-bold">2</span>
-                            </div>
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            <span class="fw-bold">2</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h5 class="mb-1">We Match You</h5>
-                            <p class="mb-0">Our team reviews your request and matches you with a qualified interpreter.</p>
-                        </div>
+                        <h4 class="fw-bold mb-3">We Match You</h4>
+                        <p class="text-muted">Our team reviews your request and matches you with a qualified, certified interpreter who specializes in your needs.</p>
                     </div>
                 </div>
-                <div class="list-group-item border-0 shadow-sm mb-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                <span class="fw-bold">3</span>
-                            </div>
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            <span class="fw-bold">3</span>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h5 class="mb-1">Confirmation</h5>
-                            <p class="mb-0">You'll receive confirmation with interpreter details and appointment information.</p>
-                        </div>
+                        <h4 class="fw-bold mb-3">Confirmation</h4>
+                        <p class="text-muted">You'll receive confirmation with interpreter details, appointment information, and all necessary documentation.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="text-center mt-5 mb-4">
-        <a asp-page="/Request" class="btn btn-primary btn-lg">Get Started - Request an Interpreter</a>
+    <div class="bg-light rounded-3 p-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h3 class="fw-bold mb-3">Ready to Get Started?</h3>
+                <p class="lead mb-4">Request an interpreter or contact us for more information about our services.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a asp-page="/Request" class="btn btn-primary btn-lg me-2 mb-2">Request an Interpreter</a>
+                <a asp-page="/Contact" class="btn btn-outline-primary btn-lg mb-2">Contact Us</a>
+            </div>
+        </div>
     </div>
 </div>

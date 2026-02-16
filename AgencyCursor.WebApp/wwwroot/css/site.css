@@ -12,12 +12,73 @@ html {
 
 body {
   margin-bottom: 60px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Professional styling improvements */
+.navbar-brand {
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.nav-link {
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.8;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.card {
+  transition: all 0.3s ease;
+}
+
+.btn {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+}
+
+.accordion-button {
+  font-size: 1.05rem;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+}
+
+[data-theme="dark"] .accordion-button:not(.collapsed) {
+  background-color: #2d3136;
+  color: #7eb8ff;
 }
 
 /* Light mode (default) */
 .nav-link-theme { color: #212529 !important; }
-.footer-theme { background-color: #fff; }
+.footer-theme { 
+  background-color: #f8f9fa; 
+  border-top: 1px solid #dee2e6;
+}
 .footer-link-theme { color: #6c757d; }
+.footer-link-theme:hover { color: #0d6efd; }
 .theme-icon-dark { display: none; }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
@@ -35,9 +96,17 @@ body {
 }
 
 [data-theme="dark"] .navbar {
-  background-color: #25282c !important;
-  border-bottom-color: #3d4046 !important;
+  background-color: #0d6efd !important;
+  border-bottom-color: #0a58ca !important;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .navbar .nav-link {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .navbar .nav-link:hover {
+  opacity: 0.8;
 }
 
 [data-theme="dark"] .nav-link-theme {
@@ -233,6 +302,11 @@ body {
   background-color: #25282c !important;
   border-top-color: #3d4046 !important;
   color: #8a8f95;
+}
+
+[data-theme="dark"] .bg-light {
+  background-color: #2d3136 !important;
+  color: #e4e6e8;
 }
 
 [data-theme="dark"] .footer-link-theme {
