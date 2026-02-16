@@ -25,7 +25,7 @@ using (var scope = app.Services.CreateScope())
     // Migrate Interpreters table to add IsRegisteredWithAgency column
     InterpreterMigrator.MigrateInterpretersTableAsync(db).GetAwaiter().GetResult();
     
-    SeedData.EnsureSeedDataAsync(db).GetAwaiter().GetResult();
+    SeedData.EnsureSeedDataAsync(db, builder.Environment.ContentRootPath).GetAwaiter().GetResult();
     
     // Import zip codes from dataset
     var datasetPath = Path.Combine(builder.Environment.ContentRootPath, "dataset", "ziplatlong2026.02.14.txt");

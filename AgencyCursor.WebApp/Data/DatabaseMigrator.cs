@@ -55,6 +55,7 @@ public static class DatabaseMigrator
                     { "ZipCode", "TEXT" },
                     { "GenderPreference", "TEXT" },
                     { "PreferredInterpreterName", "TEXT" },
+                    { "ClientNames", "TEXT" },
                     { "Specializations", "TEXT" },
                     { "EndDateTime", "TEXT" }
                 };

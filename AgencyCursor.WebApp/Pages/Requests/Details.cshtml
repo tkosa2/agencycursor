@@ -48,6 +48,11 @@
             <text>—</text>
         }
     </dd>
+    @if (!string.IsNullOrEmpty(Model.Request?.ClientNames))
+    {
+        <dt class="col-sm-2">Client Name(s)</dt>
+        <dd class="col-sm-10">@Model.Request.ClientNames</dd>
+    }
     @if (!string.IsNullOrEmpty(Model.Request?.GenderPreference))
     {
         <dt class="col-sm-2">Gender Preference</dt>

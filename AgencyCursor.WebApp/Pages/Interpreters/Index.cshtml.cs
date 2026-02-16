@@ -76,7 +76,7 @@ public class IndexModel : PageModel
 
             if (HasSearched)
             {
-                var ridDbPath = Path.Combine(_environment.ContentRootPath, "rid_interpreters.db");
+                var ridDbPath = RidDbHelper.GetRidDbPath(_environment.ContentRootPath);
                 if (System.IO.File.Exists(ridDbPath))
                 {
                     RidSearchResults = await RidInterpreterService.SearchInterpretersAsync(
@@ -115,7 +115,7 @@ public class IndexModel : PageModel
                 return BadRequest();
             }
 
-            var ridDbPath = Path.Combine(_environment.ContentRootPath, "rid_interpreters.db");
+            var ridDbPath = RidDbHelper.GetRidDbPath(_environment.ContentRootPath);
             var interpreter = await InterpreterRegistrationService.ImportInterpreterFromRidAsync(
                 _db,
                 ridDbPath,
