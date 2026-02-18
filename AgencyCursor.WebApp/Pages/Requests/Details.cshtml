@@ -8,11 +8,6 @@
 <dl class="row">
     <dt class="col-sm-2">Requestor</dt>
     <dd class="col-sm-10"><a asp-page="/Requestors/Details" asp-route-id="@Model.Request?.RequestorId">@Model.Request?.Requestor?.Name</a></dd>
-    @if (!string.IsNullOrEmpty(Model.Request?.RequestName))
-    {
-        <dt class="col-sm-2">Request Name</dt>
-        <dd class="col-sm-10">@Model.Request.RequestName</dd>
-    }
     <dt class="col-sm-2">Number of Individuals</dt>
     <dd class="col-sm-10">@Model.Request?.NumberOfIndividuals</dd>
     @if (!string.IsNullOrEmpty(Model.Request?.IndividualType))

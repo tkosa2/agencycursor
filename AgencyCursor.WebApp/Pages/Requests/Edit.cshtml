@@ -8,14 +8,19 @@
 
 <form method="post">
     <input type="hidden" asp-for="Request.Id" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Request.RequestorId" />
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+    }
     <div class="mb-2">
-        <label asp-for="Request.RequestorId" class="form-label">Requestor</label>
-        <select asp-for="Request.RequestorId" class="form-select" asp-items="Model.RequestorList"></select>
-    </div>
-    <div class="mb-2">
-        <label asp-for="Request.RequestName" class="form-label">Request Name</label>
-        <input asp-for="Request.RequestName" class="form-control" placeholder="Client/Requestor name" />
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <label class="form-label">Requestor</label>
+                <p class="form-control-static">@Model.Request.Requestor?.Name</p>
+            </div>
+            <a href="@Url.Page("/Requestors/Edit", new { id = Model.Request.RequestorId })" class="btn btn-sm btn-primary">Edit Requestor</a>
+        </div>
     </div>
     <div class="mb-2">
         <label asp-for="Request.NumberOfIndividuals" class="form-label">Number of Individuals</label>
@@ -34,7 +39,7 @@
             </div>
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
-                <label class="form-check-label" for="individual-deaf_deafblind_hh">Deaf/DeafBlind/Hard of Hearing</label>
+                <label class="form-check-label" for="individual-deaf_deafblind_hh">Hard of Hearing</label>
             </div>
         </div>
     </div>
@@ -173,21 +178,16 @@
                 <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
             </div>
             <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Spanish" id="spec-spanish" @(specializations.Contains("Spanish") ? "checked" : "") />
+                <label class="form-check-label" for="spec-spanish">Spanish Sign Language</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind" id="spec-deafblind" @(specializations.Contains("Deaf-Blind") ? "checked" : "") />
+                <label class="form-check-label" for="spec-deafblind">Deaf-Blind</label>
+            </div>
+            <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="Specializations" value="Universe" id="spec-universe" @(specializations.Contains("Universe") ? "checked" : "") />
-                <label class="form-check-label" for="spec-universe">Universe (if applicable)</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile" id="spec-tactile" @(specializations.Contains("Tactile") ? "checked" : "") />
-                <label class="form-check-label" for="spec-tactile">Tactile</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Closed up" id="spec-closed_up" @(specializations.Contains("Closed up") ? "checked" : "") />
-                <label class="form-check-label" for="spec-closed_up">Closed up</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Low vision" id="spec-low_vision" @(specializations.Contains("Low vision") ? "checked" : "") />
-                <label class="form-check-label" for="spec-low_vision">Low vision</label>
-            </div>
+                <label class="form-check-label" for="spec-universe">Universe</label>
         </div>
     </div>
     <div class="mb-2">

@@ -19,7 +19,10 @@
             }
 
             <form method="post" class="needs-validation" novalidate>
-                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+                }
 
                 <!-- 1. Requestor Information -->
                 <fieldset class="mb-4">
@@ -59,7 +62,7 @@
                         </div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
-                            <label class="form-check-label" for="individual-deaf_deafblind_hh">Deaf/DeafBlind/Hard of Hearing</label>
+                            <label class="form-check-label" for="individual-deaf_deafblind_hh">Hard of Hearing</label>
                         </div>
                     </div>
                 </fieldset>
@@ -235,6 +238,11 @@
                         <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
                     </div>
                     <div class="mb-3">
+                        <label asp-for="Request.ClientNames" class="form-label">Client Name(s)</label>
+                        <textarea asp-for="Request.ClientNames" class="form-control" rows="3" placeholder="Enter one or more client first and last names (one per line or separated by commas)"></textarea>
+                        <small class="form-text text-muted">Example: John Smith, Jane Doe or enter one per line</small>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Specialization</label>
                         <p class="text-muted mb-2">Please select any that apply:</p>
                         <div>
@@ -251,8 +259,16 @@
                                 <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile" id="spec-tactile" />
-                                <label class="form-check-label" for="spec-tactile">Tactile</label>
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Spanish" id="spec-spanish" />
+                                <label class="form-check-label" for="spec-spanish">Spanish Sign Language</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind" id="spec-deafblind" />
+                                <label class="form-check-label" for="spec-deafblind">Deaf-Blind</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Specializations" value="Universe" id="spec-universe" />
+                                <label class="form-check-label" for="spec-universe">Universe (if applicable)</label>
                             </div>
                         </div>
                     </div>

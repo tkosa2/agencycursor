@@ -16,4 +16,15 @@
     <PackageReference Include="QuestPDF" Version="2026.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="agency.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="rid_interpreters.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

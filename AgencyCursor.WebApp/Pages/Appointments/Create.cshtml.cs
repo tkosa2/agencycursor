@@ -17,6 +17,7 @@ public class CreateModel : PageModel
     public Appointment Appointment { get; set; } = null!;
 
     public new Request? Request { get; set; }
+    public DateTime? RequestEndDateTime { get; set; }
     public SelectList InterpreterList { get; set; } = null!;
     public SelectList? RequestList { get; set; }
 
@@ -34,13 +35,15 @@ public class CreateModel : PageModel
         {
             Request = await _db.Requests.Include(r => r.Requestor).FirstOrDefaultAsync(r => r.Id == requestId);
             if (Request == null) return NotFound();
+            RequestEndDateTime = Request.EndDateTime;
             Appointment = new Appointment
             {
                 RequestId = Request.Id,
                 ServiceDateTime = Request.ServiceDateTime,
                 Location = Request.Location ?? "",
                 ServiceDetails = Request.TypeOfService,
-                Status = "Pending"
+                Status = "Pending",
+                ClientEmployeeName = Request.ClientNames ?? ""
             };
             if (Request.PreferredInterpreterId.HasValue)
                 Appointment.InterpreterId = Request.PreferredInterpreterId.Value;

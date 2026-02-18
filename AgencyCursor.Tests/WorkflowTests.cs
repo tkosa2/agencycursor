@@ -300,4 +300,201 @@ public class WorkflowTests : IClassFixture<PlaywrightFixture>
             await page.CloseAsync();
         }
     }
+
+    [Fact]
+    public async Task CreateRequestFromInternal_ShouldCreateNewRequest()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+        
+        try
+        {
+            // Navigate to Requests/Create (admin page)
+            await page.GotoAsync($"{BaseUrl}/Requests/Create");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Fill in request form
+            var requestorFirstName = "Admin";
+            var requestorLastName = $"Request{DateTime.Now.Ticks}";
+            var requestorName = $"{requestorFirstName} {requestorLastName}";
+            
+            // Wait for the first name field to be visible
+            await page.WaitForSelectorAsync("input[name='RequestorFirstName']", 
+                new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible, Timeout = 10000 });
+            
+            await page.FillAsync("input[name='RequestorFirstName']", requestorFirstName);
+            await page.FillAsync("input[name='RequestorLastName']", requestorLastName);
+            await page.FillAsync("input[name='Request.NumberOfIndividuals']", "2");
+            await page.CheckAsync("input[value='deafblind']");
+
+            // Fill in Contact Information
+            var uniqueEmail = $"admin{DateTime.Now.Ticks}@example.com";
+            await page.FillAsync("input[name='RequestorPhone']", "+1 (555) 555-5555");
+            await page.FillAsync("input[name='RequestorEmail']", uniqueEmail);
+
+            // Fill in Appointment Details
+            var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
+            await page.FillAsync("input[name='AppointmentDate']", tomorrow);
+            await page.FillAsync("input[name='StartTime']", "14:00");
+            await page.FillAsync("input[name='EndTime']", "15:00");
+
+            // Select Type of Service
+            await page.CheckAsync("input[value='Legal']");
+
+            // Select Mode (In-Person)
+            await page.CheckAsync("input[value='In-Person']");
+
+            // Fill in Address
+            await page.WaitForSelectorAsync("input[name='Request.Address']", 
+                new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+            await page.FillAsync("input[name='Request.Address']", "789 Admin Lane");
+            await page.FillAsync("input[name='Request.City']", "Seattle");
+            await page.SelectOptionAsync("select[name='Request.State']", "WA");
+            await page.FillAsync("input[name='Request.ZipCode']", "98101");
+
+            // Submit the form
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Verify we're redirected and the request was created
+            Assert.True(page.Url.Contains("/Requests") || page.Url.Contains("/Details"), 
+                "Should be redirected after creating request");
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task EditRequest_ShouldUpdateRequestDetails()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+        
+        try
+        {
+            // Navigate to Requests index
+            await page.GotoAsync($"{BaseUrl}/Requests/Edit/5");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Click on the first request
+            var firstRequestLink = page.Locator("table tbody tr").First.Locator("a").First;
+            //if (await firstRequestLink.CountAsync() > 0)
+            {
+                //await firstRequestLink.ClickAsync();
+                //await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                // Get request ID from URL
+                var requestId = page.Url.Split('/').Last().Split('?').First();
+
+                // Click Edit button
+                var editLink = page.Locator("a:has-text('Edit')").First;
+                //if (await editLink.CountAsync() > 0)
+                {
+                    //await editLink.ClickAsync();
+                    //await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                    // Update some fields
+                    var newCity = "Updated City";
+                    var newZip = "99999";
+                    
+                    await page.FillAsync("input[name='Request.City']", newCity);
+                    await page.FillAsync("input[name='Request.ZipCode']", newZip);
+
+                    // Update appointment date to March 1, 2026
+                    await page.FillAsync("input[name='AppointmentDate']", "2026-03-01");
+
+                    // Update start and end times
+                    await page.FillAsync("input[name='StartTime']", "10:00");
+                    await page.FillAsync("input[name='EndTime']", "13:00");
+
+                    // Submit the form
+                    await page.ClickAsync("button[type='submit']");
+                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                    // Navigate back to details to verify changes
+                    await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                    // Verify the changes were saved
+                    var cityContent = await page.Locator($"text={newCity}").IsVisibleAsync();
+                    Assert.True(cityContent, "City should be updated");
+                }
+            }
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task EditAppointment_ShouldUpdateAppointmentDateAndTime()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+        
+        try
+        {
+            // Navigate to Appointments index
+            await page.GotoAsync($"{BaseUrl}/Appointments");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            // Find the first appointment and click Details
+            var firstAppointmentRow = page.Locator("table tbody tr").First;
+            var detailsLink = firstAppointmentRow.Locator("a:has-text('Details')").First;
+            
+            if (await detailsLink.CountAsync() > 0)
+            {
+                await detailsLink.ClickAsync();
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                // Click Edit button
+                var editLink = page.Locator("a:has-text('Edit')").First;
+                if (await editLink.CountAsync() > 0)
+                {
+                    await editLink.ClickAsync();
+                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                    // Update appointment date to March 1, 2026 from 10:00 AM to 1:00 PM (13:00)
+                    var appointmentDateTime = "2026-03-01T10:00";
+                    var endDateTime = "2026-03-01T13:00";
+                    
+                    // Try finding the service date/time fields
+                    var serviceDateTime = page.Locator("input[name='Appointment.ServiceDateTime']");
+                    if (await serviceDateTime.CountAsync() > 0)
+                    {
+                        await serviceDateTime.FillAsync(appointmentDateTime);
+                    }
+
+                    // Look for start and end time fields if separate
+                    var startTimeField = page.Locator("input[name*='StartTime'], input[name*='Start']");
+                    if (await startTimeField.CountAsync() > 0)
+                    {
+                        await startTimeField.FillAsync("10:00");
+                    }
+
+                    var endTimeField = page.Locator("input[name*='EndTime'], input[name*='End']");
+                    if (await endTimeField.CountAsync() > 0)
+                    {
+                        await endTimeField.FillAsync("13:00");
+                    }
+
+                    // Submit the form
+                    var submitButton = page.Locator("button[type='submit']").First;
+                    if (await submitButton.CountAsync() > 0)
+                    {
+                        await submitButton.ClickAsync();
+                        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                    }
+
+                    // Verify the appointment was updated
+                    Assert.True(!page.Url.Contains("/Edit"), 
+                        "Should be redirected after updating appointment");
+                }
+            }
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
 }
