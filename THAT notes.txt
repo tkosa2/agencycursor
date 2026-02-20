@@ -1,0 +1,40 @@
+START time - make sure end time is 2 hours minimum 
+
+X1. remove HH 
+X2. Remove (for urgent communication, such as delays)
+Xremove (for confirmation/updates)
+
+X8.  consumer replace with "client"
+Xreplace universal with universe
+Other language (
+
+Please select any that apply:
+ASL (American Sign Language) Interpreter
+CDI (Certified Deaf Interpreter)
+Deaf-Blind interpreter 
+	1. Closed up 
+	2. Tactile 
+		left hand
+		right hand
+		both hands
+	3. tracking 
+Universal Sign Language Interpreter
+International Interpreter (If available)
+	Russia
+	Spanish
+	Other text box
+Other interpreter text box
+
+contact me
+
+X Use THAT! vp number
+X Use request email 
+
+
+Color code
+
+1. New Request Yellow
+2. Confirmed/filled aqua
+3. Job complete cancel less than 48h hours ? Orange 
+4. Paid invoice Green 
+5. Cancel more than 48 hours RED 

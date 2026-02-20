@@ -11,8 +11,9 @@
     <div class="col-md-4">
         <div class="card h-100 border-warning shadow-sm">
             <div class="card-body">
-                <h5 class="card-title text-warning fw-bold">📋 Pending Requests</h5>
+                <h2 class="h5 card-title text-warning fw-bold">📋 Pending Requests</h2>
                 <p class="card-text display-4 fw-bold mb-3 text-warning">@Model.PendingRequestsCount</p>
+                <p class="text-muted small">New, Reviewed, or Approved requests needing assignment</p>
                 <a asp-page="/Requests/Index" class="btn btn-warning w-100">View All Requests</a>
             </div>
         </div>
@@ -20,7 +21,7 @@
     <div class="col-md-4">
         <div class="card h-100 border-primary shadow-sm">
             <div class="card-body">
-                <h5 class="card-title text-primary fw-bold mb-3">📅 Appointments</h5>
+                <h2 class="h5 card-title text-primary fw-bold mb-3">📅 Appointments</h2>
                 <div class="row g-2 mb-3">
                     <div class="col-4">
                         <div class="text-center">
@@ -48,7 +49,7 @@
     <div class="col-md-4">
         <div class="card h-100 border-warning shadow-sm">
             <div class="card-body">
-                <h5 class="card-title text-warning fw-bold">💰 Unpaid Invoices</h5>
+                <h2 class="h5 card-title text-warning fw-bold">💰 Unpaid Invoices</h2>
                 <p class="card-text display-4 fw-bold mb-3">@Model.PendingInvoicesCount</p>
                 <a asp-page="/Invoices/Index" class="btn btn-warning w-100">View All Invoices</a>
             </div>
@@ -63,7 +64,7 @@
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">📅 Appointments & Requests Calendar</h5>
+                    <h2 class="h5 mb-0">📅 Appointments & Requests Calendar</h2>
                     <div>
                         <button type="button" class="btn btn-sm btn-light" id="prevMonth">← Previous</button>
                         <button type="button" class="btn btn-sm btn-light" id="nextMonth">Next →</button>
@@ -79,12 +80,12 @@
 
 <!-- Secondary Section: Other Metrics -->
 <hr class="my-4" />
-<h3 class="mb-3 text-muted">Overview</h3>
+<h2 class="mb-3 text-muted">Overview</h2>
 <div class="row g-3">
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Requestors</h5>
+                <h3 class="h5 card-title">Requestors</h3>
                 <p class="card-text display-6">@Model.RequestorsCount</p>
                 <a asp-page="/Requestors/Index" class="card-link">Manage</a>
             </div>
@@ -93,7 +94,7 @@
     <div class="col-md-4">
         <div class="card h-100">
             <div class="card-body">
-                <h5 class="card-title">Interpreters</h5>
+                <h3 class="h5 card-title">Interpreters</h3>
                 <p class="card-text display-6">@Model.InterpretersCount</p>
                 <a asp-page="/Interpreters/Index" class="card-link">Manage</a>
             </div>
@@ -141,7 +142,7 @@
                 var monthNames = ["January", "February", "March", "April", "May", "June",
                     "July", "August", "September", "October", "November", "December"];
 
-                var html = '<h4 class="mb-3">' + monthNames[month] + ' ' + year + '</h4>';
+                var html = '<h3 class="mb-3">' + monthNames[month] + ' ' + year + '</h3>';
                 html += '<table class="table table-bordered calendar-table">';
                 html += '<thead><tr>';
                 html += '<th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>';
@@ -168,24 +169,33 @@
                                 dayEvents.slice(0, 3).forEach(function(event) {
                                     var statusClass = '';
                                     var statusIcon = '';
-                                    if (event.type === 'request') {
-                                        statusClass = 'request-pending';
-                                        statusIcon = '⏳'; // Hourglass for pending requests
-                                    } else if (event.status === 'Completed') {
-                                        statusClass = 'completed';
-                                        statusIcon = '✓'; // Checkmark for completed
-                                    } else if (event.status === 'Pending') {
-                                        statusClass = 'pending';
-                                        statusIcon = '⏰'; // Clock for pending
-                                    } else if (event.status === 'In Progress') {
-                                        statusClass = 'in-progress';
-                                        statusIcon = '⟳'; // Circular arrow for in progress
-                                    } else if (event.status === 'Cancelled') {
-                                        statusClass = 'cancelled';
-                                        statusIcon = '✗'; // X for cancelled
+                                    var statusLower = (event.status || '').toLowerCase();
+                                    
+                                    // Color coding based on REQUEST_WORKFLOW.md
+                                    // 1. New Request, Reviewed, Approved - Yellow (#FFC107)
+                                    // 2. Assigned, Confirmed - Aqua (#00CED1)
+                                    // 3. Completed, Cancelled<48h - Orange (#FFA500)
+                                    // 4. Paid - Green (#28A745)
+                                    // 5. Cancelled>48h - Red (#DC3545)
+                                    
+                                    if (statusLower === 'new request' || statusLower === 'reviewed' || statusLower === 'approved' || event.type === 'request') {
+                                        statusClass = 'event-yellow';
+                                        statusIcon = '⏳'; // Hourglass for pending review/approval
+                                    } else if (statusLower === 'assigned' || statusLower === 'confirmed') {
+                                        statusClass = 'event-aqua';
+                                        statusIcon = '✓'; // Checkmark for confirmed/assigned
+                                    } else if (statusLower === 'completed' || statusLower === 'cancelled<48h') {
+                                        statusClass = 'event-orange';
+                                        statusIcon = '⚠'; // Warning for cancelled <48h or completion pending invoice
+                                    } else if (statusLower === 'paid') {
+                                        statusClass = 'event-green';
+                                        statusIcon = '✓'; // Checkmark for paid
+                                    } else if (statusLower === 'cancelled>48h') {
+                                        statusClass = 'event-red';
+                                        statusIcon = '✗'; // X for cancelled >48h
                                     } else {
-                                        statusClass = 'assigned';
-                                        statusIcon = '✓'; // Checkmark for assigned/confirmed
+                                        statusClass = 'event-default';
+                                        statusIcon = '●';
                                     }
                                     var eventType = event.type === 'request' ? 'Request' : 'Appointment';
                                     var linkUrl = event.type === 'request' ? '/Requests/Details/' + event.id : '/Appointments/Details/' + event.id;
@@ -283,29 +293,60 @@
             font-size: 0.9em;
             display: inline-block;
         }
+        /* Color coding for calendar events per REQUEST_WORKFLOW.md */
+        /* 1. New Request, Reviewed, Approved - Yellow (#FFC107) */
+        .calendar-event.event-yellow {
+            background-color: #FFC107;
+            color: #000;
+        }
+        /* 2. Assigned, Confirmed - Aqua (#00CED1) */
+        .calendar-event.event-aqua {
+            background-color: #00CED1;
+            color: #000;
+        }
+        /* 3. Completed, Cancelled<48h - Orange (#FFA500) */
+        .calendar-event.event-orange {
+            background-color: #FFA500;
+            color: #000;
+        }
+        /* 4. Paid - Green (#28A745) */
+        .calendar-event.event-green {
+            background-color: #28A745;
+            color: #fff;
+        }
+        /* 5. Cancelled>48h - Red (#DC3545) */
+        .calendar-event.event-red {
+            background-color: #DC3545;
+            color: #fff;
+        }
+        .calendar-event.event-default {
+            background-color: #6c757d;
+            color: #fff;
+        }
+        /* Legacy support - keeping old classes for backward compatibility */
         .calendar-event.pending {
-            background-color: #ffc107;
+            background-color: #FFC107;
             color: #000;
         }
         .calendar-event.assigned {
-            background-color: #0d6efd;
-            color: #fff;
+            background-color: #00CED1;
+            color: #000;
         }
         .calendar-event.in-progress {
             background-color: #0dcaf0;
             color: #000;
         }
         .calendar-event.completed {
-            background-color: #198754;
-            color: #fff;
+            background-color: #FFA500;
+            color: #000;
         }
         .calendar-event.cancelled {
-            background-color: #dc3545;
+            background-color: #DC3545;
             color: #fff;
         }
         .calendar-event.request-pending {
-            background-color: #fd7e14;
-            color: #fff;
+            background-color: #FFC107;
+            color: #000;
         }
         .calendar-event-more {
             font-size: 0.7rem;

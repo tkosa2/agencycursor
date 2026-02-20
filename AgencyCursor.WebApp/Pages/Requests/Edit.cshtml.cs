@@ -232,6 +232,8 @@ public class EditModel : PageModel
         existingRequest.PreferredInterpreterName = Request.PreferredInterpreterName;
         existingRequest.PreferredInterpreterId = Request.PreferredInterpreterId;
         existingRequest.Specializations = Request.Specializations;
+        existingRequest.InternationalOther = Request.InternationalOther;
+        existingRequest.OtherInterpreter = Request.OtherInterpreter;
         existingRequest.Location = Request.Location;
         existingRequest.AdditionalNotes = Request.AdditionalNotes;
         existingRequest.Status = Request.Status;
@@ -240,11 +242,8 @@ public class EditModel : PageModel
         // The datetime-local input sends local time, we store it as-is
         existingRequest.ServiceDateTime = Request.ServiceDateTime;
         
-        // Handle EndDateTime if provided
-        if (Request.EndDateTime.HasValue)
-        {
-            existingRequest.EndDateTime = Request.EndDateTime;
-        }
+        // Minimum 2-hour interpreter request - always set EndDateTime to 2 hours after start
+        existingRequest.EndDateTime = Request.ServiceDateTime.AddHours(2);
         
         // Mark the entity as modified to ensure EF tracks all changes
         _db.Entry(existingRequest).State = EntityState.Modified;

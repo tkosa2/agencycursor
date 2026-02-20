@@ -54,12 +54,16 @@
     <div class="mb-2">
         <label asp-for="Appointment.Status" class="form-label"></label>
         <select asp-for="Appointment.Status" class="form-select">
-            <option value="Pending">Pending</option>
+            <option value="Assigned">Assigned</option>
             <option value="Confirmed">Confirmed</option>
-            <option value="In Progress">In Progress</option>
             <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="Cancelled<48h">Cancelled (Less than 48 hours - Charge Applies)</option>
+            <option value="Cancelled>48h">Cancelled (More than 48 hours - No Charge)</option>
+            <option value="Paid">Paid</option>
         </select>
+        <small class="form-text text-muted">
+            <strong>Workflow:</strong> Assigned → Confirmed → Completed → Paid
+        </small>
     </div>
     <div class="mb-2">
         <label asp-for="Appointment.AdditionalNotes" class="form-label"></label>

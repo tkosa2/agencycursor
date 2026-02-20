@@ -25,7 +25,7 @@ public class IndexModel : PageModel
     {
         RequestorsCount = _db.Requestors.Count();
         InterpretersCount = _db.Interpreters.Count();
-        PendingRequestsCount = _db.Requests.Count(r => r.Status == "Pending");
+        PendingRequestsCount = _db.Requests.Count(r => r.Status == "New Request" || r.Status == "Reviewed" || r.Status == "Approved");
         PendingAppointmentsCount = _db.Appointments.Count(a => a.Status == "Pending");
         AssignedAppointmentsCount = _db.Appointments.Count(a => a.Status == "Confirmed" || a.Status == "Assigned" || a.Status == "In Progress");
         CompletedAppointmentsCount = _db.Appointments.Count(a => a.Status == "Completed");
@@ -45,7 +45,7 @@ public class IndexModel : PageModel
         // Load pending requests for calendar
         Requests = await _db.Requests
             .Include(r => r.Requestor)
-            .Where(r => r.Status == "Pending" && r.ServiceDateTime >= startDate && r.ServiceDateTime <= endDate)
+            .Where(r => (r.Status == "New Request" || r.Status == "Reviewed" || r.Status == "Approved") && r.ServiceDateTime >= startDate && r.ServiceDateTime <= endDate)
             .OrderBy(r => r.ServiceDateTime)
             .ToListAsync();
     }

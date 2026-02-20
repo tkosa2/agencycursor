@@ -55,7 +55,7 @@ public static class RequestEmailParser
             return parts.Count > 0 ? string.Join(" ", parts).Trim() : null;
         }
 
-        string? clientName = GetValueAfterLabel("Client Name:") ?? GetValueAfterLabel("Requestor Name:");
+        string? consumerName = GetValueAfterLabel("Consumer Name:") ?? GetValueAfterLabel("Requestor Name:");
         string? phone = GetValueAfterLabel("Phone Number:") ?? GetValueAfterLabel("Phone:");
         string? email = GetValueAfterLabel("Email Address:") ?? GetValueAfterLabel("Email:");
         string? dateStr = GetValueAfterLabel("Date of Appointment:", true) ?? GetValueAfterLabel("Date:");
@@ -86,7 +86,7 @@ public static class RequestEmailParser
 
         return new ExtractedRequestFromEmail
         {
-            RequestorName = clientName,
+            RequestorName = consumerName,
             Phone = phone,
             Email = email,
             Address = address,

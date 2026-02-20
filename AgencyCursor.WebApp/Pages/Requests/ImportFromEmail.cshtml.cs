@@ -106,7 +106,7 @@ public class ImportFromEmailModel : PageModel
             ServiceDateTime = serviceDateTime,
             PreferredInterpreterId = preferredInterpreterId,
             AdditionalNotes = CreateInput.AdditionalNotes?.Trim(),
-            Status = "Pending"
+            Status = "New Request"
         };
         _db.Requests.Add(request);
         await _db.SaveChangesAsync();

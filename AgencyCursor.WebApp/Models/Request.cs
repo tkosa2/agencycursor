@@ -65,11 +65,17 @@ public class Request
     [Display(Name = "Preferred Interpreter Name"), StringLength(200)]
     public string? PreferredInterpreterName { get; set; }
 
-    [Display(Name = "Client Names"), StringLength(1000)]
-    public string? ClientNames { get; set; }
+    [Display(Name = "Consumers' Name"), StringLength(1000)]
+    public string? ConsumerNames { get; set; }
 
     [Display(Name = "Specializations"), StringLength(500)]
     public string? Specializations { get; set; }
+
+    [Display(Name = "International Other"), StringLength(200)]
+    public string? InternationalOther { get; set; }
+
+    [Display(Name = "Other Interpreter"), StringLength(200)]
+    public string? OtherInterpreter { get; set; }
 
     [Display(Name = "Date and Time of Service")]
     public DateTime ServiceDateTime { get; set; }
@@ -84,7 +90,7 @@ public class Request
     public string? AdditionalNotes { get; set; }
 
     [StringLength(50)]
-    public string Status { get; set; } = "Pending";
+    public string Status { get; set; } = "New Request";
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

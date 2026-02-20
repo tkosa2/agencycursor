@@ -33,35 +33,35 @@
         <label asp-for="Requestor.Email" class="form-label"></label>
         <input asp-for="Requestor.Email" class="form-control" />
     </div>
-    <div class="mb-2">
+    <div class="mb-3">
         <label asp-for="Requestor.Address" class="form-label"></label>
         <input asp-for="Requestor.Address" class="form-control" placeholder="Street address" />
         <span asp-validation-for="Requestor.Address" class="text-danger"></span>
     </div>
-    <div class="mb-2">
+    <div class="mb-3">
         <label asp-for="Requestor.Address2" class="form-label">Address 2</label>
         <input asp-for="Requestor.Address2" class="form-control" placeholder="Apartment, suite, floor, etc." />
     </div>
     <div class="row">
-        <div class="col-md-6 mb-2">
+        <div class="col-md-6 mb-3">
             <label asp-for="Requestor.City" class="form-label">City</label>
             <input asp-for="Requestor.City" class="form-control" placeholder="City" />
             <span asp-validation-for="Requestor.City" class="text-danger"></span>
         </div>
-        <div class="col-md-3 mb-2">
+        <div class="col-md-3 mb-3">
             <label asp-for="Requestor.State" class="form-label">State</label>
             <select asp-for="Requestor.State" class="form-select" asp-items="Model.StateList">
                 <option value="">-- Select State --</option>
             </select>
             <span asp-validation-for="Requestor.State" class="text-danger"></span>
         </div>
-        <div class="col-md-3 mb-2">
+        <div class="col-md-3 mb-3">
             <label asp-for="Requestor.ZipCode" class="form-label">ZIP Code</label>
             <input asp-for="Requestor.ZipCode" class="form-control" placeholder="ZIP code" pattern="[0-9]{5}(-[0-9]{4})?" title="5-digit ZIP code or ZIP+4" />
             <span asp-validation-for="Requestor.ZipCode" class="text-danger"></span>
         </div>
     </div>
-    <div class="mb-2">
+    <div class="mb-3">
         <label asp-for="Requestor.Notes" class="form-label"></label>
         <textarea asp-for="Requestor.Notes" class="form-control" rows="3"></textarea>
     </div>

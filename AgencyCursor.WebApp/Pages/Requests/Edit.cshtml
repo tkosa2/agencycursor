@@ -37,10 +37,6 @@
                 <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deafblind" id="individual-deafblind" />
                 <label class="form-check-label" for="individual-deafblind">Deaf-Blind</label>
             </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
-                <label class="form-check-label" for="individual-deaf_deafblind_hh">Hard of Hearing</label>
-            </div>
         </div>
     </div>
     <div class="mb-2">
@@ -77,8 +73,8 @@
         <input asp-for="Request.PreferredInterpreterName" class="form-control" placeholder="Name of interpreter if any" />
     </div>
     <div class="mb-2">
-        <label asp-for="Request.ClientNames" class="form-label">Client Name(s)</label>
-        <textarea asp-for="Request.ClientNames" class="form-control" rows="3" placeholder="Enter one or more client first and last names (one per line or separated by commas)"></textarea>
+        <label asp-for="Request.ConsumerNames" class="form-label">Consumer Name(s)</label>
+        <textarea asp-for="Request.ConsumerNames" class="form-control" rows="3" placeholder="Enter one or more consumer first and last names (one per line or separated by commas)"></textarea>
         <small class="form-text text-muted">Example: John Smith, Jane Doe or enter one per line</small>
     </div>
     <div class="mb-2">
@@ -101,7 +97,8 @@
     </div>
     <div class="mb-2">
         <label asp-for="Request.EndDateTime" class="form-label">End Date and Time</label>
-        <input asp-for="Request.EndDateTime" class="form-control" type="datetime-local" />
+        <input asp-for="Request.EndDateTime" class="form-control" type="datetime-local" readonly />
+        <small class="form-text text-muted">Automatically set to 2 hours after start time (minimum interpreter request)</small>
     </div>
     <div class="mb-2">
         <label asp-for="Request.Location" class="form-label">Location</label>
@@ -161,33 +158,77 @@
     </div>
     <div class="mb-2">
         <label class="form-label">Specializations</label>
+        <p class="text-muted mb-2">Please select any that apply:</p>
         <div>
             @{
                 var specializations = Model.Request?.Specializations?.Split(", ", StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
             }
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="Specializations" value="ASL" id="spec-asl" @(specializations.Contains("ASL") ? "checked" : "") />
-                <label class="form-check-label" for="spec-asl">ASL (American Sign Language)</label>
+                <label class="form-check-label" for="spec-asl">ASL (American Sign Language) Interpreter</label>
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="Specializations" value="CDI" id="spec-cdi" @(specializations.Contains("CDI") ? "checked" : "") />
                 <label class="form-check-label" for="spec-cdi">CDI (Certified Deaf Interpreter)</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Russian" id="spec-russian" @(specializations.Contains("Russian") ? "checked" : "") />
-                <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Spanish" id="spec-spanish" @(specializations.Contains("Spanish") ? "checked" : "") />
-                <label class="form-check-label" for="spec-spanish">Spanish Sign Language</label>
-            </div>
-            <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind" id="spec-deafblind" @(specializations.Contains("Deaf-Blind") ? "checked" : "") />
-                <label class="form-check-label" for="spec-deafblind">Deaf-Blind</label>
+                <label class="form-check-label" for="spec-deafblind">Deaf-Blind interpreter</label>
+            </div>
+            <div class="ms-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Closed-Up" id="spec-deafblind-closed" @(specializations.Contains("Deaf-Blind-Closed-Up") ? "checked" : "") />
+                    <label class="form-check-label" for="spec-deafblind-closed">1. Closed up</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Tactile" id="spec-deafblind-tactile" @(specializations.Contains("Deaf-Blind-Tactile") ? "checked" : "") />
+                    <label class="form-check-label" for="spec-deafblind-tactile">2. Tactile</label>
+                </div>
+                <div class="ms-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Left-Hand" id="spec-tactile-left" @(specializations.Contains("Tactile-Left-Hand") ? "checked" : "") />
+                        <label class="form-check-label" for="spec-tactile-left">left hand</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Right-Hand" id="spec-tactile-right" @(specializations.Contains("Tactile-Right-Hand") ? "checked" : "") />
+                        <label class="form-check-label" for="spec-tactile-right">right hand</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Both-Hands" id="spec-tactile-both" @(specializations.Contains("Tactile-Both-Hands") ? "checked" : "") />
+                        <label class="form-check-label" for="spec-tactile-both">both hands</label>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Tracking" id="spec-deafblind-tracking" @(specializations.Contains("Deaf-Blind-Tracking") ? "checked" : "") />
+                    <label class="form-check-label" for="spec-deafblind-tracking">3. tracking</label>
+                </div>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="Specializations" value="Universe" id="spec-universe" @(specializations.Contains("Universe") ? "checked" : "") />
-                <label class="form-check-label" for="spec-universe">Universe</label>
+                <input class="form-check-input" type="checkbox" name="Specializations" value="Universal" id="spec-universal" @(specializations.Contains("Universal") ? "checked" : "") />
+                <label class="form-check-label" for="spec-universal">Universal Sign Language Interpreter</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Specializations" value="International" id="spec-international" @(specializations.Contains("International") ? "checked" : "") />
+                <label class="form-check-label" for="spec-international">International Interpreter (If available)</label>
+            </div>
+            <div class="ms-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="International-Russia" id="spec-russia" @(specializations.Contains("International-Russia") ? "checked" : "") />
+                    <label class="form-check-label" for="spec-russia">Russia</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="International-Spanish" id="spec-spanish" @(specializations.Contains("International-Spanish") ? "checked" : "") />
+                    <label class="form-check-label" for="spec-spanish">Spanish</label>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="Request.InternationalOther" class="form-label small">Other:</label>
+                    <input asp-for="Request.InternationalOther" class="form-control form-control-sm" placeholder="Specify other international interpreter" />
+                </div>
+            </div>
+            <div class="mb-2">
+                <label asp-for="Request.OtherInterpreter" class="form-label">Other interpreter:</label>
+                <input asp-for="Request.OtherInterpreter" class="form-control" placeholder="Specify other interpreter type" />
+            </div>
         </div>
     </div>
     <div class="mb-2">
@@ -197,11 +238,13 @@
     <div class="mb-2">
         <label asp-for="Request.Status" class="form-label"></label>
         <select asp-for="Request.Status" class="form-select">
-            <option value="Pending">Pending</option>
-            <option value="Assigned">Assigned</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="New Request">New Request</option>
+            <option value="Reviewed">Reviewed</option>
+            <option value="Approved">Approved</option>
         </select>
+        <small class="form-text text-muted">
+            <strong>Workflow:</strong> New Request → Reviewed → Approved
+        </small>
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-page="Index" class="btn btn-secondary">Cancel</a>
@@ -249,6 +292,32 @@
             toggleMeetingLink();
             toggleMode();
             toggleOtherService();
+
+            // Auto-update end date/time to be 2 hours after start date/time
+            var serviceDateTimeInput = $("input[name='Request.ServiceDateTime']");
+            var endDateTimeInput = $("input[name='Request.EndDateTime']");
+            
+            function updateEndDateTime() {
+                if (serviceDateTimeInput.val()) {
+                    var startDateTime = new Date(serviceDateTimeInput.val());
+                    if (!isNaN(startDateTime.getTime())) {
+                        // Add 2 hours
+                        var endDateTime = new Date(startDateTime.getTime() + (2 * 60 * 60 * 1000));
+                        // Format for datetime-local input: YYYY-MM-DDTHH:mm
+                        var year = endDateTime.getFullYear();
+                        var month = String(endDateTime.getMonth() + 1).padStart(2, '0');
+                        var day = String(endDateTime.getDate()).padStart(2, '0');
+                        var hours = String(endDateTime.getHours()).padStart(2, '0');
+                        var minutes = String(endDateTime.getMinutes()).padStart(2, '0');
+                        var formattedDateTime = year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+                        endDateTimeInput.val(formattedDateTime);
+                    }
+                }
+            }
+            
+            serviceDateTimeInput.on("change input", updateEndDateTime);
+            // Set initial value
+            updateEndDateTime();
 
             // Update when location changes
             locationSelect.on("change", toggleMeetingLink);

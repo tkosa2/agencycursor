@@ -2,6 +2,7 @@ using AgencyCursor.Data;
 using AgencyCursor.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace AgencyCursor.Pages.Requests;
@@ -14,11 +15,34 @@ public class IndexModel : PageModel
 
     public IList<Request> Requests { get; set; } = new List<Request>();
 
+    [BindProperty(SupportsGet = true)]
+    public string? StatusFilter { get; set; }
+
+    public SelectList StatusOptions { get; set; } = null!;
+
     public void OnGet()
     {
-        Requests = _db.Requests
+        var statusOptions = new List<string>
+        {
+            "All",
+            "New Request",
+            "Reviewed",
+            "Approved",
+            "Broadcasted"
+        };
+        StatusOptions = new SelectList(statusOptions);
+
+        var query = _db.Requests
             .Include(r => r.Requestor)
             .Include(r => r.PreferredInterpreter)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(StatusFilter) && StatusFilter != "All")
+        {
+            query = query.Where(r => r.Status == StatusFilter);
+        }
+
+        Requests = query
             .OrderByDescending(r => r.ServiceDateTime)
             .ToList();
     }
@@ -63,7 +87,7 @@ public class IndexModel : PageModel
             ServiceDateTime = originalRequest.ServiceDateTime,
             EndDateTime = originalRequest.EndDateTime,
             Location = originalRequest.Location,
-            Status = "Pending", // Reset status to Pending for cloned request
+            Status = "New Request", // Reset status to New Request for cloned request
             AdditionalNotes = originalRequest.AdditionalNotes != null 
                 ? $"Cloned from Request #{originalRequest.Id}. {originalRequest.AdditionalNotes}"
                 : $"Cloned from Request #{originalRequest.Id}."

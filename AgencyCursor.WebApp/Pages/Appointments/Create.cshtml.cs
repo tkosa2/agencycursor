@@ -43,7 +43,7 @@ public class CreateModel : PageModel
                 Location = Request.Location ?? "",
                 ServiceDetails = Request.TypeOfService,
                 Status = "Pending",
-                ClientEmployeeName = Request.ClientNames ?? ""
+                ClientEmployeeName = Request.ConsumerNames ?? ""
             };
             if (Request.PreferredInterpreterId.HasValue)
                 Appointment.InterpreterId = Request.PreferredInterpreterId.Value;

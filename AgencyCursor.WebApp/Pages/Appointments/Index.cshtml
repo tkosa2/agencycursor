@@ -4,6 +4,17 @@
     ViewData["Title"] = "Appointments";
 }
 
+<style>
+    .badge-aqua {
+        background-color: #00CED1;
+        color: #000;
+    }
+    .bg-orange {
+        background-color: #FFA500;
+        color: #000;
+    }
+</style>
+
 <h1>Appointments</h1>
 <p class="text-muted">Scheduled services when an interpreter is assigned to a request.</p>
 
@@ -48,7 +59,20 @@
                 <td><a asp-page="/Interpreters/Details" asp-route-id="@a.InterpreterId">@a.Interpreter?.Name</a></td>
                 <td>@a.ServiceDateTime.ToString("g")</td>
                 <td>@a.Location</td>
-                <td><span class="badge bg-info">@a.Status</span></td>
+                <td>
+                    @{
+                        var badgeClass = a.Status?.ToLower() switch
+                        {
+                            "pending" or "new" => "bg-warning text-dark",
+                            "assigned" or "confirmed" => "badge-aqua",
+                            "completed" or "cancelled<48h" => "bg-orange text-dark",
+                            "paid" => "bg-success",
+                            "cancelled" or "cancelled>48h" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass">@a.Status</span>
+                </td>
                 <td>
                     <a asp-page="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Details</a>
                     <a asp-page="Edit" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">Edit</a>

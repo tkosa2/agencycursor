@@ -53,3 +53,11 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Visual Studio workspace cache
+.vs/
+
+# Repository-local generated files
+AgencyCursor.WebApp/agency.db
+AgencyCursor.WebApp/helloworld.zip
+test_output.txt

@@ -68,11 +68,11 @@ public class RequestModel : PageModel
             IndividualType = "deaf",
             Mode = "In-Person",
             GenderPreference = "none",
-            Status = "Pending"
+            Status = "New Request"
         };
         AppointmentDate = DateTime.Today;
         StartTime = new TimeSpan(9, 0, 0);
-        EndTime = new TimeSpan(10, 0, 0);
+        EndTime = new TimeSpan(11, 0, 0);
         return Page();
     }
 
@@ -185,10 +185,11 @@ public class RequestModel : PageModel
         
         // Combine date and time for ServiceDateTime
         Request.ServiceDateTime = AppointmentDate.Date.Add(StartTime);
-        Request.EndDateTime = AppointmentDate.Date.Add(EndTime);
+        // Minimum 2-hour interpreter request
+        Request.EndDateTime = Request.ServiceDateTime.AddHours(2);
         
-        // Always set Status to Pending for new requests
-        Request.Status = "Pending";
+        // Always set Status to New Request for new requests
+        Request.Status = "New Request";
 
         // Set Location based on Mode
         if (Request.Mode == "Virtual")

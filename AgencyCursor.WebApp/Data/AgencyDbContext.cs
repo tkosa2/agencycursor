@@ -14,6 +14,7 @@ public class AgencyDbContext : DbContext
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<ZipCode> ZipCodes => Set<ZipCode>();
+    public DbSet<InterpreterResponse> InterpreterResponses => Set<InterpreterResponse>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

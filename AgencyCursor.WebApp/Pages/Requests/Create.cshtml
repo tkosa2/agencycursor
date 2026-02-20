@@ -62,7 +62,7 @@
         </div>
         <div class="mb-3">
             <label asp-for="Request.NumberOfIndividuals" class="form-label">
-                Number of Deaf/Hard-of-Hearing or Deaf-Blind Individuals <span class="text-danger">*</span>
+                Number of Deaf or Deaf-Blind Individuals <span class="text-danger">*</span>
             </label>
             <input asp-for="Request.NumberOfIndividuals" class="form-control" type="number" min="1" max="99" value="1" required />
             <span asp-validation-for="Request.NumberOfIndividuals" class="text-danger"></span>
@@ -77,10 +77,6 @@
                 <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deafblind" id="individual-deafblind" />
                 <label class="form-check-label" for="individual-deafblind">Deaf-Blind</label>
             </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" asp-for="Request.IndividualType" value="deaf_deafblind_hh" id="individual-deaf_deafblind_hh" />
-                <label class="form-check-label" for="individual-deaf_deafblind_hh">Hard of Hearing</label>
-            </div>
         </div>
     </fieldset>
 
@@ -89,14 +85,14 @@
         <legend class="h5 mb-3">2. Contact Information</legend>
         <div class="mb-3">
             <label asp-for="RequestorPhone" class="form-label">
-                Phone Number <span class="text-muted">(for urgent communication, such as delays)</span> <span class="text-danger">*</span>
+                Phone Number <span class="text-danger">*</span>
             </label>
             <input asp-for="RequestorPhone" class="form-control" type="tel" required />
             <span asp-validation-for="RequestorPhone" class="text-danger"></span>
         </div>
         <div class="mb-3">
             <label asp-for="RequestorEmail" class="form-label">
-                Email Address <span class="text-muted">(for confirmation/updates)</span> <span class="text-danger">*</span>
+                Email Address <span class="text-danger">*</span>
             </label>
             <input asp-for="RequestorEmail" class="form-control" type="email" required />
             <span asp-validation-for="RequestorEmail" class="text-danger"></span>
@@ -125,8 +121,8 @@
                 <label asp-for="EndTime" class="form-label">
                     End Time <span class="text-danger">*</span>
                 </label>
-                <input asp-for="EndTime" class="form-control" type="time" required />
-                <span asp-validation-for="EndTime" class="text-danger"></span>
+                <input asp-for="EndTime" class="form-control" type="time" readonly />
+                <small class="form-text text-muted">Automatically set to 2 hours after start time (minimum interpreter request)</small>
             </div>
         </div>
     </fieldset>
@@ -260,27 +256,69 @@
             <div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="Specializations" value="ASL" id="spec-asl" />
-                    <label class="form-check-label" for="spec-asl">ASL (American Sign Language)</label>
+                    <label class="form-check-label" for="spec-asl">ASL (American Sign Language) Interpreter</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="Specializations" value="CDI" id="spec-cdi" />
                     <label class="form-check-label" for="spec-cdi">CDI (Certified Deaf Interpreter)</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="Specializations" value="Russian" id="spec-russian" />
-                    <label class="form-check-label" for="spec-russian">Russian Sign Language</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="Specializations" value="Spanish" id="spec-spanish" />
-                    <label class="form-check-label" for="spec-spanish">Spanish Sign Language</label>
-                </div>
-                <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind" id="spec-deafblind" />
-                    <label class="form-check-label" for="spec-deafblind">Deaf-Blind</label>
+                    <label class="form-check-label" for="spec-deafblind">Deaf-Blind interpreter</label>
+                </div>
+                <div class="ms-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Closed-Up" id="spec-deafblind-closed" />
+                        <label class="form-check-label" for="spec-deafblind-closed">1. Closed up</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Tactile" id="spec-deafblind-tactile" />
+                        <label class="form-check-label" for="spec-deafblind-tactile">2. Tactile</label>
+                    </div>
+                    <div class="ms-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Left-Hand" id="spec-tactile-left" />
+                            <label class="form-check-label" for="spec-tactile-left">left hand</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Right-Hand" id="spec-tactile-right" />
+                            <label class="form-check-label" for="spec-tactile-right">right hand</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Specializations" value="Tactile-Both-Hands" id="spec-tactile-both" />
+                            <label class="form-check-label" for="spec-tactile-both">both hands</label>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="Deaf-Blind-Tracking" id="spec-deafblind-tracking" />
+                        <label class="form-check-label" for="spec-deafblind-tracking">3. tracking</label>
+                    </div>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="Specializations" value="Universe" id="spec-universe" />
-                    <label class="form-check-label" for="spec-universe">Universe (if applicable)</label>
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="Universal" id="spec-universal" />
+                    <label class="form-check-label" for="spec-universal">Universal Sign Language Interpreter</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Specializations" value="International" id="spec-international" />
+                    <label class="form-check-label" for="spec-international">International Interpreter (If available)</label>
+                </div>
+                <div class="ms-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="International-Russia" id="spec-russia" />
+                        <label class="form-check-label" for="spec-russia">Russia</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="Specializations" value="International-Spanish" id="spec-spanish" />
+                        <label class="form-check-label" for="spec-spanish">Spanish</label>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Request.InternationalOther" class="form-label small">Other:</label>
+                        <input asp-for="Request.InternationalOther" class="form-control form-control-sm" placeholder="Specify other international interpreter" />
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label asp-for="Request.OtherInterpreter" class="form-label">Other interpreter:</label>
+                    <input asp-for="Request.OtherInterpreter" class="form-control" placeholder="Specify other interpreter type" />
                 </div>
             </div>
         </div>
@@ -329,6 +367,33 @@
             if (modeInPerson) modeInPerson.addEventListener('change', toggleMode);
             if (modeVirtual) modeVirtual.addEventListener('change', toggleMode);
             toggleMode();
+
+            // Auto-update end time to be 2 hours after start time
+            var startTimeInput = document.querySelector('input[name="StartTime"]');
+            var endTimeInput = document.querySelector('input[name="EndTime"]');
+            
+            function updateEndTime() {
+                if (startTimeInput && endTimeInput && startTimeInput.value) {
+                    var timeParts = startTimeInput.value.split(':');
+                    if (timeParts.length >= 2) {
+                        var hours = parseInt(timeParts[0], 10);
+                        var minutes = parseInt(timeParts[1], 10);
+                        // Add 2 hours
+                        hours = (hours + 2) % 24;
+                        // Format with leading zeros
+                        var endHours = hours.toString().padStart(2, '0');
+                        var endMinutes = minutes.toString().padStart(2, '0');
+                        endTimeInput.value = endHours + ':' + endMinutes;
+                    }
+                }
+            }
+            
+            if (startTimeInput) {
+                startTimeInput.addEventListener('change', updateEndTime);
+                startTimeInput.addEventListener('input', updateEndTime);
+                // Set initial value
+                updateEndTime();
+            }
 
             // Toggle "Other" appointment type field
             var typeOther = document.getElementById('type-other');

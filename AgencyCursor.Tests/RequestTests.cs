@@ -3,7 +3,8 @@ using Xunit;
 
 namespace AgencyCursor.Tests;
 
-public class RequestTests : IClassFixture<PlaywrightFixture>
+[Collection("Web App Collection")]
+public class RequestTests
 {
     private readonly PlaywrightFixture _fixture;
     private const string BaseUrl = "http://localhost:5084";
@@ -24,8 +25,11 @@ public class RequestTests : IClassFixture<PlaywrightFixture>
             await page.GotoAsync($"{BaseUrl}/Request");
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
+            var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+
             // Fill in Requestor Information
-            await page.FillAsync("input[name='Request.RequestName']", "Test Requestor");
+            await page.FillAsync("input[name='RequestorFirstName']", "Test");
+            await page.FillAsync("input[name='RequestorLastName']", $"Requestor-{timestamp}");
             await page.FillAsync("input[name='Request.NumberOfIndividuals']", "1");
             await page.CheckAsync("input[value='deaf']");
 
@@ -37,23 +41,44 @@ public class RequestTests : IClassFixture<PlaywrightFixture>
             var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
             await page.FillAsync("input[name='AppointmentDate']", tomorrow);
             await page.FillAsync("input[name='StartTime']", "09:00");
-            await page.FillAsync("input[name='EndTime']", "10:00");
 
             // Select Type of Service
-            await page.CheckAsync("input[value='Medical']");
+            await page.CheckAsync("input[value='Other']");
+            await page.WaitForSelectorAsync("input[name='Request.TypeOfServiceOther']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+            await page.FillAsync("input[name='Request.TypeOfServiceOther']", "Other appointment details");
 
             // Select Mode (In-Person)
+            await page.CheckAsync("input[value='Virtual']");
+            await page.WaitForSelectorAsync("textarea[name='Request.MeetingLink']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+            await page.FillAsync("textarea[name='Request.MeetingLink']", "Meeting link: https://zoom.us/j/123456789\nPasscode: 123456\nPhone: +1 (555) 123-4567\nMeeting ID: 123 456 7890\nOther information...");
             await page.CheckAsync("input[value='In-Person']");
 
             // Fill in Address (wait for the section to be visible)
             await page.WaitForSelectorAsync("input[name='Request.Address']", new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
             await page.FillAsync("input[name='Request.Address']", "123 Test Street");
+            await page.FillAsync("input[name='Request.Address2']", "Suite 200");
             await page.FillAsync("input[name='Request.City']", "Anchorage");
             
             // Select State from dropdown
             await page.SelectOptionAsync("select[name='Request.State']", "AK");
             
             await page.FillAsync("input[name='Request.ZipCode']", "99501");
+
+            // Interpreter Preferences and Notes
+            await page.CheckAsync("input[value='female']");
+            await page.FillAsync("input[name='Request.PreferredInterpreterName']", "Jamie Doe");
+            await page.FillAsync("textarea[id='Request_ConsumerNames']", "John Smith\nJane Doe");
+            await page.FillAsync("input[name='Request.InternationalOther']", "Italian");
+            await page.FillAsync("input[name='Request.OtherInterpreter']", "Cued speech");
+            await page.FillAsync("textarea[name='Request.AdditionalNotes']", "Please arrive 10 minutes early.");
+
+            // Check all specialization checkboxes
+            var specializationCheckboxes = page.Locator("input[type='checkbox'][name='Specializations']");
+            var specializationCount = await specializationCheckboxes.CountAsync();
+            for (var index = 0; index < specializationCount; index++)
+            {
+                await specializationCheckboxes.Nth(index).CheckAsync();
+            }
 
             // Submit the form
             await page.ClickAsync("button[type='submit']");
@@ -85,7 +110,8 @@ public class RequestTests : IClassFixture<PlaywrightFixture>
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
             // Fill in Requestor Information
-            await page.FillAsync("input[name='Request.RequestName']", "Virtual Test Requestor");
+            await page.FillAsync("input[name='RequestorFirstName']", "Virtual");
+            await page.FillAsync("input[name='RequestorLastName']", "Requestor");
             await page.FillAsync("input[name='Request.NumberOfIndividuals']", "1");
             await page.CheckAsync("input[value='deaf']");
 
@@ -97,7 +123,6 @@ public class RequestTests : IClassFixture<PlaywrightFixture>
             var tomorrow = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd");
             await page.FillAsync("input[name='AppointmentDate']", tomorrow);
             await page.FillAsync("input[name='StartTime']", "14:00");
-            await page.FillAsync("input[name='EndTime']", "15:00");
 
             // Select Type of Service
             await page.CheckAsync("input[value='Legal']");

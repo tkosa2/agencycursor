@@ -53,11 +53,11 @@
         <fieldset class="form-section" aria-labelledby="sec-contact">
           <legend id="sec-contact" class="form-section-title">2. Contact Information</legend>
           <div class="field-group">
-            <label for="phone">Phone Number <span class="text-muted">(for urgent communication, such as delays)</span> <span aria-hidden="true">*</span></label>
+            <label for="phone">Phone Number <span aria-hidden="true">*</span></label>
             <input type="tel" id="phone" name="phone" required autocomplete="tel">
           </div>
           <div class="field-group">
-            <label for="email">Email Address <span class="text-muted">(for confirmation/updates)</span> <span aria-hidden="true">*</span></label>
+            <label for="email">Email Address <span aria-hidden="true">*</span></label>
             <input type="email" id="email" name="email" required autocomplete="email">
           </div>
         </fieldset>
@@ -160,13 +160,29 @@
             <span class="form-section-title" style="font-size:1rem;">Specialization</span>
             <p class="text-muted" style="margin-bottom:0.5rem;">Please select any that apply:</p>
             <div class="checkbox-group">
-              <label><input type="checkbox" name="specialization" value="asl"> ASL (American Sign Language)</label><br>
+              <label><input type="checkbox" name="specialization" value="asl"> ASL (American Sign Language) Interpreter</label><br>
               <label><input type="checkbox" name="specialization" value="cdi"> CDI (Certified Deaf Interpreter)</label><br>
-              <label><input type="checkbox" name="specialization" value="russian"> Russian Sign Language</label><br>
-              <label><input type="checkbox" name="specialization" value="universe"> Universe (if applicable)</label><br>
-              <label><input type="checkbox" name="specialization" value="tactile"> Tactile</label><br>
-              <label><input type="checkbox" name="specialization" value="closed_up"> Closed up</label><br>
-              <label><input type="checkbox" name="specialization" value="low_vision"> Low vision</label>
+              <label><input type="checkbox" name="specialization" value="deafblind"> Deaf-Blind interpreter</label><br>
+              <div style="margin-left:2rem;">
+                <label><input type="checkbox" name="specialization" value="deafblind_closed_up"> 1. Closed up</label><br>
+                <label><input type="checkbox" name="specialization" value="deafblind_tactile"> 2. Tactile</label><br>
+                <div style="margin-left:2rem;">
+                  <label><input type="checkbox" name="specialization" value="tactile_left_hand"> left hand</label><br>
+                  <label><input type="checkbox" name="specialization" value="tactile_right_hand"> right hand</label><br>
+                  <label><input type="checkbox" name="specialization" value="tactile_both_hands"> both hands</label><br>
+                </div>
+                <label><input type="checkbox" name="specialization" value="deafblind_tracking"> 3. tracking</label><br>
+              </div>
+              <label><input type="checkbox" name="specialization" value="universal"> Universal Sign Language Interpreter</label><br>
+              <label><input type="checkbox" name="specialization" value="international"> International Interpreter (If available)</label><br>
+              <div style="margin-left:2rem;">
+                <label><input type="checkbox" name="specialization" value="international_russia"> Russia</label><br>
+                <label><input type="checkbox" name="specialization" value="international_spanish"> Spanish</label><br>
+                <label for="international-other" style="display:block;margin-top:0.5rem;">Other:</label>
+                <input type="text" id="international-other" name="international_other" placeholder="Specify other international interpreter" style="margin-left:0;margin-top:0.25rem;"><br>
+              </div>
+              <label for="other-interpreter" style="display:block;margin-top:0.5rem;">Other interpreter:</label>
+              <input type="text" id="other-interpreter" name="other_interpreter" placeholder="Specify other interpreter type" style="margin-left:0;margin-top:0.25rem;">
             </div>
           </div>
         </fieldset>

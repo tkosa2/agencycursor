@@ -43,10 +43,10 @@
             <text>—</text>
         }
     </dd>
-    @if (!string.IsNullOrEmpty(Model.Request?.ClientNames))
+    @if (!string.IsNullOrEmpty(Model.Request?.ConsumerNames))
     {
-        <dt class="col-sm-2">Client Name(s)</dt>
-        <dd class="col-sm-10">@Model.Request.ClientNames</dd>
+        <dt class="col-sm-2">Consumer Name(s)</dt>
+        <dd class="col-sm-10">@Model.Request.ConsumerNames</dd>
     }
     @if (!string.IsNullOrEmpty(Model.Request?.GenderPreference))
     {
@@ -137,6 +137,10 @@
 <p>
     <a asp-page="Edit" asp-route-id="@Model.Request?.Id" class="btn btn-primary">Edit</a>
     <a asp-page="/Appointments/Create" asp-route-requestId="@Model.Request?.Id" class="btn btn-success">Assign Interpreter</a>
+    @if (Model.Request?.Status == "Approved")
+    {
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#notifyInterpretersModal">Notify Interpreters</button>
+    }
     <a asp-page="Index" class="btn btn-secondary">Back to List</a>
 </p>
 
@@ -162,3 +166,122 @@ else
 {
     <p>No interpreter assigned yet. <a asp-page="/Appointments/Create" asp-route-requestId="@Model.Request?.Id">Assign Interpreter</a></p>
 }
+
+@if (Model.Request?.Status == "Broadcasted")
+{
+    <h2>Interpreter Responses</h2>
+    @if (Model.InterpreterResponses.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Interpreter</th>
+                            <th>Response</th>
+                            <th>Notes</th>
+                            <th>Responded</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var response in Model.InterpreterResponses)
+                        {
+                            var badgeClass = response.Status switch
+                            {
+                                "Yes" => "bg-success",
+                                "Maybe" => "bg-warning text-dark",
+                                "No" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            <tr>
+                                <td><strong>@response.Interpreter?.Name</strong></td>
+                                <td>
+                                    <span class="badge @badgeClass">@response.Status</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(response.Notes))
+                                    {
+                                        <small>@response.Notes</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">—</small>
+                                    }
+                                </td>
+                                <td><small class="text-muted">@response.RespondedAt.ToString("g")</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <strong>Waiting for responses...</strong> This request has been broadcasted but no interpreters have responded yet.
+        </div>
+    }
+}
+<!-- Notify Interpreters Modal -->
+<div class="modal fade" id="notifyInterpretersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notify Interpreters - Request #@Model.Request?.Id</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" asp-page-handler="NotifyInterpreters">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Request Details:</strong><br />
+                        Service: @Model.Request?.TypeOfService @(!string.IsNullOrEmpty(Model.Request?.TypeOfServiceOther) ? "(" + Model.Request.TypeOfServiceOther + ")" : "")<br />
+                        Date/Time: @Model.Request?.ServiceDateTime.ToString("g")<br />
+                        Specializations: @(!string.IsNullOrEmpty(Model.Request?.Specializations) ? Model.Request.Specializations : "—")
+                    </div>
+
+                    <h6>Select Interpreters to Notify:</h6>
+                    <input type="hidden" name="RequestId" value="@Model.Request?.Id" />
+
+                    @if (Model.Interpreters?.Any() == true)
+                    {
+                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                            @foreach (var interpreter in Model.Interpreters)
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="SelectedInterpreterIds" value="@interpreter.Id" id="interpreter_@interpreter.Id" />
+                                    <label class="form-check-label" for="interpreter_@interpreter.Id">
+                                        <strong>@interpreter.Name</strong>
+                                        @if (!string.IsNullOrEmpty(interpreter.Languages))
+                                        {
+                                            <span class="text-muted text-sm"> - @interpreter.Languages</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(interpreter.Email))
+                                        {
+                                            <br /><small class="text-muted">@interpreter.Email</small>
+                                        }
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            No interpreters available. <a asp-page="/Interpreters/Index">Manage interpreters</a>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <label for="customMessage" class="form-label">Additional Message (optional):</label>
+                        <textarea class="form-control" id="customMessage" name="CustomMessage" rows="3" placeholder="Include any additional notes for the interpreters..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Notifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

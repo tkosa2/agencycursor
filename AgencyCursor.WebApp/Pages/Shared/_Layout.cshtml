@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - THAT!</title>
+    <title>@(!string.IsNullOrWhiteSpace(ViewData["Title"] as string) ? $"{ViewData["Title"]} | AgencyCursor" : "AgencyCursor | Interpreting Services")</title>
     <script>
         (function () {
             var theme = localStorage.getItem('theme') || 'light';
@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="~/AgencyCursor.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary border-bottom box-shadow mb-3">
             <div class="container">
@@ -56,7 +57,7 @@
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main id="main-content" role="main" class="pb-3" tabindex="-1">
             @RenderBody()
         </main>
     </div>
