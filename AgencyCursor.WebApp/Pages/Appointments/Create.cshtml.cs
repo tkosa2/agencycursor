@@ -1,5 +1,6 @@
 using AgencyCursor.Data;
 using AgencyCursor.Models;
+using AgencyCursor.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,8 +11,17 @@ namespace AgencyCursor.Pages.Appointments;
 public class CreateModel : PageModel
 {
     private readonly AgencyDbContext _db;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
-    public CreateModel(AgencyDbContext db) => _db = db;
+    public CreateModel(AgencyDbContext db, IEmailService emailService, IConfiguration configuration, IWebHostEnvironment environment)
+    {
+        _db = db;
+        _emailService = emailService;
+        _configuration = configuration;
+        _environment = environment;
+    }
 
     [BindProperty]
     public Appointment Appointment { get; set; } = null!;
@@ -168,6 +178,40 @@ public class CreateModel : PageModel
 
             _db.Appointments.Add(Appointment);
             await _db.SaveChangesAsync();
+
+            // Send confirmation email to requestor
+            try
+            {
+                // Reload appointment with full navigation properties
+                var savedAppointment = await _db.Appointments
+                    .Include(a => a.Interpreter)
+                    .Include(a => a.Request)
+                    .ThenInclude(r => r.Requestor)
+                    .FirstOrDefaultAsync(a => a.Id == Appointment.Id);
+
+                if (savedAppointment?.Request?.Requestor != null)
+                {
+                    var requestor = savedAppointment.Request.Requestor;
+                    var recipientEmail = _environment.IsDevelopment() 
+                        ? (_configuration["SmtpSettings:TestEmailAddress"] ?? "tkosa3@gmail.com")
+                        : requestor.Email;
+
+                    if (!string.IsNullOrEmpty(recipientEmail))
+                    {
+                        var confirmationEmail = BuildAppointmentConfirmationEmail(savedAppointment);
+                        await _emailService.SendEmailAsync(
+                            recipientEmail,
+                            $"Appointment Confirmed - Interpreter Booked for {savedAppointment.ServiceDateTime:d}",
+                            confirmationEmail);
+                    }
+                }
+            }
+            catch (Exception emailEx)
+            {
+                // Log but don't fail - email is non-critical
+                Console.WriteLine($"Failed to send appointment confirmation email: {emailEx.Message}");
+            }
+
             TempData["SuccessMessage"] = "Appointment created successfully.";
             return RedirectToPage("Index");
         }
@@ -189,5 +233,90 @@ public class CreateModel : PageModel
         var requests = await _db.Requests.Include(r => r.Requestor).OrderByDescending(r => r.ServiceDateTime).ToListAsync();
         RequestList = new SelectList(requests.Select(r => new { r.Id, Display = $"#{r.Id} - {r.Requestor?.Name} - {r.ServiceDateTime:g}" }), "Id", "Display");
         Request = await _db.Requests.Include(r => r.Requestor).FirstOrDefaultAsync(r => r.Id == Appointment.RequestId);
+    }
+
+    private string BuildAppointmentConfirmationEmail(Appointment appointment)
+    {
+        var requestor = appointment.Request?.Requestor;
+        var interpreter = appointment.Interpreter;
+        
+        return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #0D6EFD; color: white; padding: 20px; border-radius: 5px; text-align: center; }}
+        .content {{ padding: 20px; background-color: #f9f9f9; border-radius: 5px; margin-top: 20px; }}
+        .section {{ margin: 15px 0; }}
+        .label {{ font-weight: bold; color: #0D6EFD; }}
+        .badge {{ display: inline-block; padding: 5px 10px; background-color: #28A745; color: white; border-radius: 3px; }}
+        .details {{ background-color: white; padding: 15px; border-left: 4px solid #0D6EFD; margin: 10px 0; }}
+        .footer {{ text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class=""container"">
+        <div class=""header"">
+            <h1>Appointment Confirmed!</h1>
+            <p>Your interpreter has been successfully booked</p>
+        </div>
+
+        <div class=""content"">
+            <p>Dear {requestor?.Name},</p>
+
+            <p>Your interpretation appointment has been confirmed and scheduled. Here are the details:</p>
+
+            <div class=""details"">
+                <div class=""section"">
+                    <span class=""label"">Appointment Status:</span> <span class=""badge"">Confirmed & Booked</span>
+                </div>
+                
+                <div class=""section"">
+                    <span class=""label"">Date & Time:</span> {appointment.ServiceDateTime:dddd, MMMM d, yyyy} at {appointment.ServiceDateTime:h:mm tt}
+                </div>
+
+                <div class=""section"">
+                    <span class=""label"">Interpreter:</span> {interpreter?.Name}
+                </div>
+
+                <div class=""section"">
+                    <span class=""label"">Contact:</span> {interpreter?.Email} | {interpreter?.Phone}
+                </div>
+
+                <div class=""section"">
+                    <span class=""label"">Service Type:</span> {appointment.ServiceDetails ?? "General"}
+                </div>
+
+                <div class=""section"">
+                    <span class=""label"">Location:</span> {appointment.Location ?? "Virtual/Remote"}
+                </div>
+
+                @if (!string.IsNullOrEmpty(appointment.AdditionalNotes))
+                {{
+                    <div class=""section"">
+                        <span class=""label"">Additional Notes:</span> {appointment.AdditionalNotes}
+                    </div>
+                }}
+            </div>
+
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>The assigned interpreter will contact you to confirm any final details</li>
+                <li>Please ensure you have any necessary materials or setup ready</li>
+                <li>If you need to make changes, please contact us as soon as possible</li>
+            </ul>
+
+            <p>Thank you for choosing our interpretation services!</p>
+        </div>
+
+        <div class=""footer"">
+            <p>This is an automated confirmation email. Please do not reply to this email.</p>
+            <p>For questions or to reschedule, contact the agency directly.</p>
+        </div>
+    </div>
+</body>
+</html>";
     }
 }
