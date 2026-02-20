@@ -19,7 +19,8 @@ public class IndexModel : PageModel
         Appointments = _db.Appointments
             .Include(a => a.Request)
             .ThenInclude(r => r!.Requestor)
-            .Include(a => a.Interpreter)
+            .Include(a => a.AppointmentInterpreters)
+            .ThenInclude(ai => ai.Interpreter)
             .OrderByDescending(a => a.ServiceDateTime)
             .ToList();
     }
@@ -33,6 +34,7 @@ public class IndexModel : PageModel
         }
 
         var originalAppointment = await _db.Appointments
+            .Include(a => a.AppointmentInterpreters)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (originalAppointment == null)
@@ -45,19 +47,29 @@ public class IndexModel : PageModel
         var clonedAppointment = new Appointment
         {
             RequestId = originalAppointment.RequestId,
-            InterpreterId = originalAppointment.InterpreterId,
+            InterpreterId = originalAppointment.InterpreterId, // Keep for backwards compatibility
             ServiceDateTime = originalAppointment.ServiceDateTime,
             Location = originalAppointment.Location,
             Status = "Pending", // Reset status to Pending for cloned appointment
             ServiceDetails = originalAppointment.ServiceDetails,
             DurationMinutes = originalAppointment.DurationMinutes,
-            ClientEmployeeName = originalAppointment.ClientEmployeeName,
             AdditionalNotes = originalAppointment.AdditionalNotes != null 
                 ? $"Cloned from Appointment #{originalAppointment.Id}. {originalAppointment.AdditionalNotes}"
                 : $"Cloned from Appointment #{originalAppointment.Id}."
         };
 
         _db.Appointments.Add(clonedAppointment);
+        await _db.SaveChangesAsync();
+
+        // Clone the interpreter team
+        foreach (var ai in originalAppointment.AppointmentInterpreters)
+        {
+            _db.AppointmentInterpreters.Add(new AppointmentInterpreter
+            {
+                AppointmentId = clonedAppointment.Id,
+                InterpreterId = ai.InterpreterId
+            });
+        }
         await _db.SaveChangesAsync();
 
         TempData["SuccessMessage"] = $"Appointment #{originalAppointment.Id} has been cloned. New appointment ID: #{clonedAppointment.Id}";

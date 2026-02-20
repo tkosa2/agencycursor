@@ -25,6 +25,6 @@ public class CreateModel : PageModel
         
         _db.Interpreters.Add(Interpreter);
         await _db.SaveChangesAsync();
-        return RedirectToPage("Index");
+        return RedirectToPage("Index", new { registeredOnly = true });
     }
 }

@@ -16,16 +16,64 @@
     </div>
 }
 
+@if (Model.Appointment?.Request != null)
+{
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Associated Request</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Request ID</dt>
+                <dd class="col-sm-9"><a asp-page="/Requests/Details" asp-route-id="@Model.Appointment.Request.Id">Request #@Model.Appointment.Request.Id</a></dd>
+                <dt class="col-sm-3">Requestor</dt>
+                <dd class="col-sm-9">@Model.Appointment.Request.Requestor?.Name</dd>
+                <dt class="col-sm-3">Type of Service</dt>
+                <dd class="col-sm-9">
+                    @Model.Appointment.Request.TypeOfService
+                    @if (!string.IsNullOrEmpty(Model.Appointment.Request.TypeOfServiceOther))
+                    {
+                        <span class="text-muted"> - @Model.Appointment.Request.TypeOfServiceOther</span>
+                    }
+                </dd>
+                <dt class="col-sm-3">Number of Individuals</dt>
+                <dd class="col-sm-9">@Model.Appointment.Request.NumberOfIndividuals</dd>
+                <dt class="col-sm-3">Consumer Names</dt>
+                <dd class="col-sm-9">@Model.Appointment.Request.ConsumerNames</dd>
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @{
+                        var badgeClass = Model.Appointment.Request.Status?.ToLower() switch
+                        {
+                            "new" => "bg-warning text-dark",
+                            "broadcasted" => "bg-info",
+                            "assigned" => "badge-aqua",
+                            "confirmed" => "bg-primary",
+                            "completed" => "bg-success",
+                            "cancelled" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass">@Model.Appointment.Request.Status</span>
+                </dd>
+            </dl>
+        </div>
+    </div>
+}
+
 <form method="post">
     <input type="hidden" asp-for="Appointment.Id" />
     <input type="hidden" asp-for="Appointment.RequestId" />
-    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+    @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+    {
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+    }
     <div class="mb-2">
-        <label asp-for="Appointment.InterpreterId" class="form-label">Interpreter</label>
-        <select asp-for="Appointment.InterpreterId" class="form-select" asp-items="Model.InterpreterList">
-            <option value="">-- Select Interpreter --</option>
+        <label asp-for="SelectedInterpreterIds" class="form-label">Interpreters (Team)</label>
+        <select asp-for="SelectedInterpreterIds" class="form-select" asp-items="Model.InterpreterList" multiple>
         </select>
-        <span asp-validation-for="Appointment.InterpreterId" class="text-danger"></span>
+        <small class="form-text text-muted">Select one or more interpreters for this appointment</small>
+        <span asp-validation-for="SelectedInterpreterIds" class="text-danger"></span>
     </div>
     <div class="mb-2">
         <label asp-for="Appointment.ServiceDateTime" class="form-label">Date and Time</label>
@@ -48,27 +96,66 @@
         <input asp-for="Appointment.DurationMinutes" class="form-control" type="number" />
     </div>
     <div class="mb-2">
-        <label asp-for="Appointment.ClientEmployeeName" class="form-label"></label>
-        <input asp-for="Appointment.ClientEmployeeName" class="form-control" />
-    </div>
-    <div class="mb-2">
         <label asp-for="Appointment.Status" class="form-label"></label>
         <select asp-for="Appointment.Status" class="form-select">
-            <option value="Assigned">Assigned</option>
             <option value="Confirmed">Confirmed</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled<48h">Cancelled (Less than 48 hours - Charge Applies)</option>
             <option value="Cancelled>48h">Cancelled (More than 48 hours - No Charge)</option>
-            <option value="Paid">Paid</option>
         </select>
         <small class="form-text text-muted">
-            <strong>Workflow:</strong> Assigned → Confirmed → Completed → Paid
+            <strong>Workflow:</strong> Confirmed → Completed
         </small>
     </div>
     <div class="mb-2">
         <label asp-for="Appointment.AdditionalNotes" class="form-label"></label>
         <textarea asp-for="Appointment.AdditionalNotes" class="form-control" rows="3"></textarea>
     </div>
+    
+    <!-- Email Logs Section -->
+    @if (Model.EmailLogs != null && Model.EmailLogs.Any())
+    {
+        <div class="card mt-4 mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Sent & Response Emails</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Interpreter</th>
+                                <th>Sent At</th>
+                                <th>Status</th>
+                                <th>Error Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var email in Model.EmailLogs)
+                            {
+                                <tr>
+                                    <td>@email.Interpreter?.Name</td>
+                                    <td>@email.SentAt.ToString("g")</td>
+                                    <td>
+                                        @if (email.Status == "Success")
+                                        {
+                                            <span class="badge bg-success">Success</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Failed</span>
+                                        }
+                                    </td>
+                                    <td>@email.ErrorMessage</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-page="Index" class="btn btn-secondary">Cancel</a>
 </form>

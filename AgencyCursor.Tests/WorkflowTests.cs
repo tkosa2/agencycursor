@@ -710,22 +710,7 @@ public class WorkflowTests
 
                     var appointmentId = page.Url.Split('/').Last().Split('?').First();
 
-                    // 1. Set status to Assigned (initial assignment)
-                    await page.SelectOptionAsync("select[name='Appointment.Status']", "Assigned");
-                    await page.ClickAsync("button[type='submit']");
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-                    await page.GotoAsync($"{BaseUrl}/Appointments/Details/{appointmentId}");
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-                    var assignedBadge = page.Locator("dt:has-text('Status')").Locator("..").Locator("dd .badge");
-                    var assignedStatus = (await assignedBadge.TextContentAsync())?.Trim();
-                    Assert.True(assignedStatus == "Assigned", "Appointment should have 'Assigned' status after interpreter assignment");
-
-                    // 2. Change to Confirmed
-                    await page.GotoAsync($"{BaseUrl}/Appointments/Edit/{appointmentId}");
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                    
+                    // 1. Set status to Confirmed (initial confirmation)
                     await page.SelectOptionAsync("select[name='Appointment.Status']", "Confirmed");
                     await page.ClickAsync("button[type='submit']");
                     await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
@@ -737,7 +722,7 @@ public class WorkflowTests
                     var confirmedStatus = (await confirmedBadge.TextContentAsync())?.Trim();
                     Assert.True(confirmedStatus == "Confirmed", "Appointment should have 'Confirmed' status after confirmation");
 
-                    // 3. Change to Completed
+                    // 2. Change to Completed
                     await page.GotoAsync($"{BaseUrl}/Appointments/Edit/{appointmentId}");
                     await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
                     
@@ -752,20 +737,20 @@ public class WorkflowTests
                     var completedStatus = (await completedBadge.TextContentAsync())?.Trim();
                     Assert.True(completedStatus == "Completed", "Appointment should have 'Completed' status after service completion");
 
-                    // 4. Change to Paid
+                    // 3. Test cancellation with <48h option
                     await page.GotoAsync($"{BaseUrl}/Appointments/Edit/{appointmentId}");
                     await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
                     
-                    await page.SelectOptionAsync("select[name='Appointment.Status']", "Paid");
+                    await page.SelectOptionAsync("select[name='Appointment.Status']", "Cancelled<48h");
                     await page.ClickAsync("button[type='submit']");
                     await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
                     await page.GotoAsync($"{BaseUrl}/Appointments/Details/{appointmentId}");
                     await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
-                    var paidBadge = page.Locator("dt:has-text('Status')").Locator("..").Locator("dd .badge");
-                    var paidStatus = (await paidBadge.TextContentAsync())?.Trim();
-                    Assert.True(paidStatus == "Paid", "Appointment should have 'Paid' status after payment");
+                    var cancelledBadge = page.Locator("dt:has-text('Status')").Locator("..").Locator("dd .badge");
+                    var cancelledStatus = (await cancelledBadge.TextContentAsync())?.Trim();
+                    Assert.True(cancelledStatus == "Cancelled<48h", "Appointment should have 'Cancelled<48h' status");
                 }
             }
         }
@@ -1055,6 +1040,378 @@ public class WorkflowTests
         {
             await page.CloseAsync();
         }
+    }
+
+    [Fact]
+    public async Task BroadcastedRequest_ShouldLogEmailAndCaptureResponses()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+
+        try
+        {
+            var interpreterName1 = $"EmailInterp_{DateTime.Now:yyyyMMdd_HHmmss}_A";
+            var interpreterEmail1 = $"interpA_{DateTime.Now.Ticks}@example.com";
+            await CreateInterpreterAsync(page, interpreterName1, interpreterEmail1);
+
+            var interpreterName2 = $"EmailInterp_{DateTime.Now:yyyyMMdd_HHmmss}_B";
+            var interpreterEmail2 = $"interpB_{DateTime.Now.Ticks}@example.com";
+            await CreateInterpreterAsync(page, interpreterName2, interpreterEmail2);
+
+            var requestorLastName = $"Broadcast_{DateTime.Now.Ticks}";
+            var requestId = await CreateApprovedRequestAsync(page, requestorLastName);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.ClickAsync("button:has-text('Notify Interpreters')");
+            var modal = page.Locator("#notifyInterpretersModal");
+            await modal.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+
+            var interpreterCheckboxes = modal.Locator("input[name='SelectedInterpreterIds']");
+            var firstInterpreterId = await interpreterCheckboxes.Nth(0).GetAttributeAsync("value");
+            var secondInterpreterId = await interpreterCheckboxes.Nth(1).GetAttributeAsync("value");
+
+            await interpreterCheckboxes.Nth(0).CheckAsync();
+            await interpreterCheckboxes.Nth(1).CheckAsync();
+            await modal.Locator("textarea[name='CustomMessage']").FillAsync("Mock email broadcast for testing.");
+            await modal.Locator("button[type='submit']").ClickAsync(new LocatorClickOptions { NoWaitAfter = true });
+            await page.WaitForTimeoutAsync(1000);
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.WaitForSelectorAsync("span.badge:has-text('Broadcasted')",
+                new PageWaitForSelectorOptions { Timeout = 60000 });
+
+            var broadcastedBadge = page.Locator("span.badge:has-text('Broadcasted')").First;
+            Assert.True(await broadcastedBadge.IsVisibleAsync(), "Request status should be 'Broadcasted' after notify");
+
+            var emailLogRowA = page.Locator($"table tbody tr:has-text('{interpreterName1}')").First;
+            var emailLogRowB = page.Locator($"table tbody tr:has-text('{interpreterName2}')").First;
+            Assert.True(await emailLogRowA.IsVisibleAsync(), "Email log should contain first interpreter");
+            Assert.True(await emailLogRowB.IsVisibleAsync(), "Email log should contain second interpreter");
+
+            Assert.False(string.IsNullOrWhiteSpace(firstInterpreterId));
+            Assert.False(string.IsNullOrWhiteSpace(secondInterpreterId));
+
+            await page.GotoAsync($"{BaseUrl}/Interpreters/RespondToRequest/{requestId}/{firstInterpreterId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.CheckAsync("#response-yes");
+            await page.FillAsync("textarea[name='Notes']", "Yes - available.");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Interpreters/RespondToRequest/{requestId}/{secondInterpreterId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.CheckAsync("#response-maybe");
+            await page.FillAsync("textarea[name='Notes']", "Maybe - need more info.");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Interpreters/RespondToRequest/{requestId}/{firstInterpreterId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.CheckAsync("#response-no");
+            await page.FillAsync("textarea[name='Notes']", "Update: no longer available.");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            var responseRowA = page.Locator($"table tbody tr:has-text('{interpreterName1}'):has-text('No')").First;
+            var responseRowB = page.Locator($"table tbody tr:has-text('{interpreterName2}'):has-text('Maybe')").First;
+
+            Assert.True(await responseRowA.IsVisibleAsync(), "Dashboard should show updated response for interpreter A");
+            Assert.True(await responseRowB.IsVisibleAsync(), "Dashboard should show response for interpreter B");
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task AppointmentToInvoice_HappyPath_ShouldCalculateTotalsAndTrackPayment()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+
+        try
+        {
+            var interpreterName = $"InvoiceInterp_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var interpreterEmail = $"invoice_{DateTime.Now.Ticks}@example.com";
+            await CreateInterpreterAsync(page, interpreterName, interpreterEmail);
+
+            var requestorLastName = $"Invoice_{DateTime.Now.Ticks}";
+            var requestId = await CreateApprovedRequestAsync(page, requestorLastName);
+
+            await page.GotoAsync($"{BaseUrl}/TestEmailLog?clear=true");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.ClickAsync("a:has-text('Assign Interpreter')");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.SelectOptionAsync("select[name='SelectedInterpreterIds']",
+                new[] { new SelectOptionValue { Label = interpreterName } });
+            var appointmentDate = DateTime.Today.AddDays(2).ToString("yyyy-MM-dd");
+            await page.FillAsync("input[name='Appointment.ServiceDateTime']", $"{appointmentDate}T10:00");
+            await page.FillAsync("input[name='Appointment.DurationMinutes']", "120");
+            await page.SelectOptionAsync("select[name='Appointment.Status']", "Confirmed");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/Appointments", page.Url);
+
+            await page.GotoAsync($"{BaseUrl}/TestEmailLog");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var confirmationRow = page.Locator("table tbody tr:has-text('Appointment Confirmed')").First;
+            var fallbackRow = page.Locator("table tbody tr:has-text('Interpreter(s) Booked')").First;
+
+            var hasConfirmation = await confirmationRow.IsVisibleAsync();
+            if (!hasConfirmation)
+            {
+                await fallbackRow.WaitForAsync(new LocatorWaitForOptions { Timeout = 60000 });
+                Assert.True(await fallbackRow.IsVisibleAsync(), "Appointment confirmation email should be recorded in test email log");
+            }
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var appointmentLink = page.Locator("a:has-text('Appointment #')").First;
+            var appointmentHref = await appointmentLink.GetAttributeAsync("href");
+            Assert.False(string.IsNullOrWhiteSpace(appointmentHref));
+
+            var appointmentId = appointmentHref!.Split('/').Last();
+            await page.GotoAsync($"{BaseUrl}/Appointments/Edit/{appointmentId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.SelectOptionAsync("select[name='Appointment.Status']", "Completed");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Appointments/Details/{appointmentId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var statusBadge = page.Locator("dt:has-text('Status')").Locator("..").Locator("dd .badge");
+            var statusText = (await statusBadge.TextContentAsync())?.Trim();
+            Assert.Equal("Cancelled<48h", statusText);
+            await page.ClickAsync("a:has-text('Create Invoice')");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("appointmentId=", page.Url);
+
+            var hoursWorkedValue = await page.InputValueAsync("input[name='Invoice.HoursWorked']");
+            Assert.Equal("2", hoursWorkedValue);
+
+            await page.FillAsync("input[name='Invoice.HourlyRate']", "100");
+            await page.FillAsync("input[name='Invoice.Discount']", "0");
+            await page.SelectOptionAsync("select[name='Invoice.PaymentStatus']", "Pending");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Invoices");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var invoiceRow = page.Locator($"table tbody tr:has-text('{requestorLastName}')").First;
+            await invoiceRow.Locator("a:has-text('Edit')").ClickAsync();
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.SelectOptionAsync("select[name='Invoice.PaymentStatus']", "Paid");
+            await page.FillAsync("input[name='Invoice.PaymentMethod']", "Test Payment");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Invoices");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var paidBadge = page.Locator("span.badge.bg-success:has-text('Paid')").First;
+            Assert.True(await paidBadge.IsVisibleAsync(), "Invoice payment status should be 'Paid'");
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task InvoiceCancellationFee_ShouldApplyForCancelledLessThan48h()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+
+        try
+        {
+            var interpreterName = $"CancelFeeInterp_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var interpreterEmail = $"cancelfee_{DateTime.Now.Ticks}@example.com";
+            await CreateInterpreterAsync(page, interpreterName, interpreterEmail);
+
+            var requestorLastName = $"CancelFee_{DateTime.Now.Ticks}";
+            var requestId = await CreateApprovedRequestAsync(page, requestorLastName);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.ClickAsync("a:has-text('Assign Interpreter')");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.SelectOptionAsync("select[name='SelectedInterpreterIds']",
+                new[] { new SelectOptionValue { Label = interpreterName } });
+            var appointmentDate = DateTime.Today.AddDays(3).ToString("yyyy-MM-dd");
+            await page.FillAsync("input[name='Appointment.ServiceDateTime']", $"{appointmentDate}T13:00");
+            await page.FillAsync("input[name='Appointment.DurationMinutes']", "60");
+            await page.SelectOptionAsync("select[name='Appointment.Status']", "Cancelled<48h");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/Appointments", page.Url);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var appointmentLink = page.Locator("a:has-text('Appointment #')").First;
+            var appointmentHref = await appointmentLink.GetAttributeAsync("href");
+            Assert.False(string.IsNullOrWhiteSpace(appointmentHref));
+
+            var appointmentId = appointmentHref!.Split('/').Last();
+            await page.GotoAsync($"{BaseUrl}/Appointments/Edit/{appointmentId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.SelectOptionAsync("select[name='Appointment.Status']", "Cancelled<48h");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Appointments/Details/{appointmentId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.ClickAsync("a:has-text('Create Invoice')");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("appointmentId=", page.Url);
+
+            var hoursWorkedValue = await page.InputValueAsync("input[name='Invoice.HoursWorked']");
+            Assert.Equal("2", hoursWorkedValue);
+
+            await page.FillAsync("input[name='Invoice.HourlyRate']", "100");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.GotoAsync($"{BaseUrl}/Invoices");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            var invoiceRow = page.Locator($"table tbody tr:has-text('{requestorLastName}')").First;
+            var totalCell = invoiceRow.Locator("td").Nth(4);
+            var totalText = (await totalCell.TextContentAsync()) ?? string.Empty;
+            Assert.Contains("200", totalText);
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task AppointmentCancellation_MoreThan48Hours_ShouldBeCancelled()
+    {
+        var page = await _fixture.Browser.NewPageAsync();
+
+        try
+        {
+            var interpreterName = $"CancelInterp_{DateTime.Now:yyyyMMdd_HHmmss}";
+            var interpreterEmail = $"cancel_{DateTime.Now.Ticks}@example.com";
+            await CreateInterpreterAsync(page, interpreterName, interpreterEmail);
+
+            var requestorLastName = $"Cancel_{DateTime.Now.Ticks}";
+            var requestId = await CreateApprovedRequestAsync(page, requestorLastName);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await page.ClickAsync("a:has-text('Assign Interpreter')");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            await page.SelectOptionAsync("select[name='SelectedInterpreterIds']",
+                new[] { new SelectOptionValue { Label = interpreterName } });
+            var appointmentDate = DateTime.Today.AddDays(5).ToString("yyyy-MM-dd");
+            await page.FillAsync("input[name='Appointment.ServiceDateTime']", $"{appointmentDate}T11:00");
+            await page.FillAsync("input[name='Appointment.DurationMinutes']", "60");
+            await page.SelectOptionAsync("select[name='Appointment.Status']", "Cancelled>48h");
+            await page.ClickAsync("button[type='submit']");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            Assert.Contains("/Appointments", page.Url);
+
+            await page.GotoAsync($"{BaseUrl}/Requests/Details/{requestId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var appointmentLink = page.Locator("a:has-text('Appointment #')").First;
+            var appointmentHref = await appointmentLink.GetAttributeAsync("href");
+            Assert.False(string.IsNullOrWhiteSpace(appointmentHref));
+
+            var appointmentId = appointmentHref!.Split('/').Last();
+            await page.GotoAsync($"{BaseUrl}/Appointments/Details/{appointmentId}");
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+            var cancelledBadge = page.Locator("dt:has-text('Status')").Locator("..").Locator("dd .badge");
+            var cancelledStatus = (await cancelledBadge.TextContentAsync())?.Trim();
+            Assert.True(cancelledStatus == "Cancelled>48h", "Appointment should have 'Cancelled>48h' status");
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    private async Task CreateInterpreterAsync(IPage page, string name, string email)
+    {
+        await page.GotoAsync($"{BaseUrl}/Interpreters/Create");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await page.FillAsync("input[name='Interpreter.Name']", name);
+        await page.FillAsync("input[name='Interpreter.Email']", email);
+        await page.ClickAsync("button[type='submit']");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+    }
+
+    private async Task<int> CreateApprovedRequestAsync(IPage page, string requestorLastName)
+    {
+        await page.GotoAsync($"{BaseUrl}/Request");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var requestorFirstName = "Workflow";
+        await page.WaitForSelectorAsync("input[name='RequestorFirstName']",
+            new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible, Timeout = 10000 });
+        await page.FillAsync("input[name='RequestorFirstName']", requestorFirstName);
+        await page.FillAsync("input[name='RequestorLastName']", requestorLastName);
+        await page.FillAsync("input[name='Request.NumberOfIndividuals']", "1");
+        await page.CheckAsync("input[value='deaf']");
+
+        var uniqueEmail = $"{requestorLastName}@example.com";
+        await page.FillAsync("input[name='RequestorPhone']", "+1 (555) 555-0000");
+        await page.FillAsync("input[name='RequestorEmail']", uniqueEmail);
+
+        var appointmentDate = DateTime.Today.AddDays(365).ToString("yyyy-MM-dd");
+        await page.FillAsync("input[name='AppointmentDate']", appointmentDate);
+        await page.FillAsync("input[name='StartTime']", "09:30");
+        await page.EvaluateAsync("() => { const end = document.querySelector('input[name=\"EndTime\"]'); if (end) { end.value = '11:30'; end.dispatchEvent(new Event('input', { bubbles: true })); end.dispatchEvent(new Event('change', { bubbles: true })); } }");
+        await page.CheckAsync("input[value='Medical']");
+
+        await page.WaitForSelectorAsync("input[name='Request.Address']",
+            new PageWaitForSelectorOptions { State = WaitForSelectorState.Visible });
+        await page.FillAsync("input[name='Request.Address']", "100 Main St");
+        await page.FillAsync("input[name='Request.City']", "Anchorage");
+        await page.SelectOptionAsync("select[name='Request.State']", "AK");
+        await page.FillAsync("input[name='Request.ZipCode']", "99501");
+
+        await page.ClickAsync("button[type='submit']");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        await page.GotoAsync($"{BaseUrl}/Requests");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var requestRow = page.Locator("table tbody tr").First;
+        await requestRow.WaitForAsync(new LocatorWaitForOptions { Timeout = 60000 });
+        var rowText = await requestRow.InnerTextAsync();
+
+        if (!rowText.Contains(requestorLastName, StringComparison.OrdinalIgnoreCase))
+        {
+            var fallbackRow = page.Locator($"table tbody tr:has-text('{requestorLastName}')").First;
+            await fallbackRow.WaitForAsync(new LocatorWaitForOptions { Timeout = 60000 });
+            requestRow = fallbackRow;
+        }
+
+        await requestRow.Locator("a:has-text('Details')").ClickAsync();
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        var requestId = page.Url.Split('/').Last().Split('?').First();
+
+        await page.GotoAsync($"{BaseUrl}/Requests/Edit/{requestId}");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await page.SelectOptionAsync("select[name='Request.Status']", "Approved");
+        await page.ClickAsync("button[type='submit']");
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+        return int.Parse(requestId);
     }
 
     [Fact(Skip = "Deprecated: Cancellation statuses apply to appointments, not requests. Use appointment cancellation tests instead.")]

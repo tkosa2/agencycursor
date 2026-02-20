@@ -7,7 +7,7 @@
 <h1>Add Interpreter (Manual Entry)</h1>
 <p class="text-muted">
     Add an interpreter manually to the agency's registered interpreter list. 
-    <strong>Note:</strong> For RID-registered interpreters, use the <a asp-page="Index">Search RID Registry</a> page to find and register them automatically.
+    <strong>Note:</strong> For RID-registered interpreters, use the <a asp-page="SearchRIDRegistry">Search RID Registry</a> page to find and register them automatically.
 </p>
 
 <form method="post" class="needs-validation" novalidate>
@@ -28,9 +28,21 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Interpreter.Phone" class="form-label">Phone</label>
-                <input type="tel" asp-for="Interpreter.Phone" class="form-control" />
-                <span asp-validation-for="Interpreter.Phone" class="text-danger"></span>
+                <label asp-for="Interpreter.HomePhone" class="form-label">Home Phone</label>
+                <input type="tel" asp-for="Interpreter.HomePhone" class="form-control" inputmode="tel" placeholder="(555) 555-5555" data-phone-mask />
+                <span asp-validation-for="Interpreter.HomePhone" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Interpreter.BusinessPhone" class="form-label">Business Phone</label>
+                <input type="tel" asp-for="Interpreter.BusinessPhone" class="form-control" inputmode="tel" placeholder="(555) 555-5555" data-phone-mask />
+                <span asp-validation-for="Interpreter.BusinessPhone" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Interpreter.MobilePhone" class="form-label">Mobile Phone</label>
+                <input type="tel" asp-for="Interpreter.MobilePhone" class="form-control" inputmode="tel" placeholder="(555) 555-5555" data-phone-mask />
+                <span asp-validation-for="Interpreter.MobilePhone" class="text-danger"></span>
             </div>
 
             <div class="mb-3">
@@ -157,4 +169,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function formatPhone(value) {
+                if (!value) return "";
+                var digits = value.replace(/\D/g, "");
+                if (digits.length < 10) return value;
+                var core = digits.slice(-10);
+                return "(" + core.slice(0, 3) + ") " + core.slice(3, 6) + "-" + core.slice(6, 10);
+            }
+
+            document.querySelectorAll("[data-phone-mask]").forEach(function (input) {
+                input.addEventListener("blur", function () {
+                    input.value = formatPhone(input.value);
+                });
+            });
+        })();
+    </script>
 }

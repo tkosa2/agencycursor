@@ -19,11 +19,15 @@ public class DetailsModel : PageModel
     {
         if (id == null) return NotFound();
         Interpreter = await _db.Interpreters
-            .Include(i => i.Appointments)
+            .Include(i => i.AppointmentInterpreters)
+            .ThenInclude(ai => ai.Appointment)
             .ThenInclude(a => a.Request)
             .FirstOrDefaultAsync(m => m.Id == id);
         if (Interpreter == null) return NotFound();
-        Appointments = Interpreter.Appointments.OrderByDescending(a => a.ServiceDateTime).ToList();
+        Appointments = Interpreter.AppointmentInterpreters
+            .Select(ai => ai.Appointment)
+            .OrderByDescending(a => a.ServiceDateTime)
+            .ToList();
         return Page();
     }
 }

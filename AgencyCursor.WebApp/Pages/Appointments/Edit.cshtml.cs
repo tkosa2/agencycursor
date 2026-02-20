@@ -16,7 +16,11 @@ public class EditModel : PageModel
     [BindProperty]
     public Appointment Appointment { get; set; } = null!;
 
+    [BindProperty]
+    public List<int> SelectedInterpreterIds { get; set; } = new();
+
     public SelectList InterpreterList { get; set; } = null!;
+    public IList<InterpreterEmailLog> EmailLogs { get; set; } = new List<InterpreterEmailLog>();
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
@@ -24,10 +28,20 @@ public class EditModel : PageModel
         var a = await _db.Appointments
             .Include(app => app.Request)
             .ThenInclude(r => r!.Requestor)
+            .Include(app => app.AppointmentInterpreters)
             .FirstOrDefaultAsync(app => app.Id == id);
         if (a == null) return NotFound();
         Appointment = a;
-        InterpreterList = new SelectList(_db.Interpreters.OrderBy(i => i.Name), "Id", "Name", Appointment.InterpreterId);
+        SelectedInterpreterIds = a.AppointmentInterpreters.Select(ai => ai.InterpreterId).ToList();
+        InterpreterList = new SelectList(_db.Interpreters.OrderBy(i => i.Name), "Id", "Name");
+        
+        // Load email logs for this appointment's request
+        EmailLogs = await _db.InterpreterEmailLogs
+            .Where(el => el.RequestId == Appointment.RequestId)
+            .Include(el => el.Interpreter)
+            .OrderByDescending(el => el.SentAt)
+            .ToListAsync();
+        
         return Page();
     }
 
@@ -36,20 +50,15 @@ public class EditModel : PageModel
         // Remove validation errors for navigation properties that aren't being edited
         ModelState.Remove("Appointment.Request");
         ModelState.Remove("Appointment.Interpreter");
+        ModelState.Remove("Appointment.AppointmentInterpreters");
         
         // Load the existing appointment to preserve values that aren't being changed
         var existingAppointment = await _db.Appointments
             .Include(a => a.Request)
+            .Include(a => a.AppointmentInterpreters)
             .FirstOrDefaultAsync(a => a.Id == Appointment.Id);
         
         if (existingAppointment == null) return NotFound();
-        
-        // If InterpreterId is 0 or not provided, use the existing value
-        if (Appointment.InterpreterId == 0)
-        {
-            Appointment.InterpreterId = existingAppointment.InterpreterId;
-            ModelState.Remove("Appointment.InterpreterId");
-        }
         
         // Ensure RequestId is preserved
         if (Appointment.RequestId == 0)
@@ -73,33 +82,56 @@ public class EditModel : PageModel
                 TempData["ErrorMessage"] = "Please correct the errors below and try again.";
             }
             
-            // Reload requestor info for display
+            // Reload requestor info and interpreters for display
             var appointment = await _db.Appointments
                 .Include(app => app.Request)
                 .ThenInclude(r => r!.Requestor)
+                .Include(app => app.AppointmentInterpreters)
                 .FirstOrDefaultAsync(app => app.Id == Appointment.Id);
             if (appointment != null)
             {
                 Appointment.Request = appointment.Request;
+                SelectedInterpreterIds = appointment.AppointmentInterpreters.Select(ai => ai.InterpreterId).ToList();
             }
-            InterpreterList = new SelectList(_db.Interpreters.OrderBy(i => i.Name), "Id", "Name", Appointment.InterpreterId);
+            InterpreterList = new SelectList(_db.Interpreters.OrderBy(i => i.Name), "Id", "Name");
+            
+            // Load email logs for this appointment's request
+            EmailLogs = await _db.InterpreterEmailLogs
+                .Where(el => el.RequestId == Appointment.RequestId)
+                .Include(el => el.Interpreter)
+                .OrderByDescending(el => el.SentAt)
+                .ToListAsync();
+            
             return Page();
         }
         
-        // existingAppointment is already loaded above, reuse it
-        
         // Update appointment properties
-        existingAppointment.InterpreterId = Appointment.InterpreterId;
         existingAppointment.ServiceDateTime = Appointment.ServiceDateTime;
         existingAppointment.Location = Appointment.Location;
         existingAppointment.ServiceDetails = Appointment.ServiceDetails;
         existingAppointment.DurationMinutes = Appointment.DurationMinutes;
-        existingAppointment.ClientEmployeeName = Appointment.ClientEmployeeName;
         existingAppointment.Status = Appointment.Status;
         existingAppointment.AdditionalNotes = Appointment.AdditionalNotes;
         
+        // Update interpreter team
+        // Remove existing interpreters
+        _db.AppointmentInterpreters.RemoveRange(existingAppointment.AppointmentInterpreters);
+        
+        // Add selected interpreters
+        if (SelectedInterpreterIds != null && SelectedInterpreterIds.Any())
+        {
+            foreach (var interpreterId in SelectedInterpreterIds)
+            {
+                existingAppointment.AppointmentInterpreters.Add(new AppointmentInterpreter
+                {
+                    AppointmentId = existingAppointment.Id,
+                    InterpreterId = interpreterId
+                });
+            }
+        }
+        
         // If appointment is cancelled, update the related request status to "Cancelled"
-        if (Appointment.Status == "Cancelled" && existingAppointment.Request != null)
+        if (Appointment.Status.StartsWith("Cancelled") && existingAppointment.Request != null)
         {
             existingAppointment.Request.Status = "Cancelled";
             // Explicitly mark the Request entity as modified to ensure the change is saved

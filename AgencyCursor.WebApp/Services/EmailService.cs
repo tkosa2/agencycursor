@@ -35,6 +35,7 @@ public class EmailService : IEmailService
         var userName = smtpSettings["Username"];
         var password = smtpSettings["Password"];
         var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
+        var useMock = bool.TryParse(smtpSettings["UseMock"], out var mockEnabled) && mockEnabled;
 
         // During development, redirect all emails to the test email address
         var recipientEmail = toEmail;
@@ -57,10 +58,30 @@ public class EmailService : IEmailService
             Status = "Success"
         };
 
+        var testEmailEntry = new TestEmailEntry
+        {
+            ToEmail = toEmail,
+            Subject = subject,
+            RequestId = requestId,
+            InterpreterId = interpreterId
+        };
+
+        if (_environment.IsDevelopment() && useMock)
+        {
+            TestEmailStore.Record(testEmailEntry);
+            if (requestId.HasValue && interpreterId.HasValue && requestId > 0 && interpreterId > 0)
+            {
+                _db.InterpreterEmailLogs.Add(emailLog);
+                await _db.SaveChangesAsync();
+            }
+            return;
+        }
+
         using (var client = new SmtpClient(smtpHost, smtpPort))
         {
             client.EnableSsl = enableSsl;
             client.Credentials = new NetworkCredential(userName, password);
+            client.Timeout = 5000;
 
             using (var message = new MailMessage())
             {
@@ -78,10 +99,14 @@ public class EmailService : IEmailService
                 {
                     emailLog.Status = "Failed";
                     emailLog.ErrorMessage = ex.Message;
+                    testEmailEntry.Status = "Failed";
+                    testEmailEntry.ErrorMessage = ex.Message;
                     Console.WriteLine($"Failed to send email to {recipientEmail}: {ex.Message}");
                 }
             }
         }
+
+        TestEmailStore.Record(testEmailEntry);
 
         // Log the email if we have request/interpreter context
         if (requestId.HasValue && interpreterId.HasValue && requestId > 0 && interpreterId > 0)
@@ -101,6 +126,7 @@ public class EmailService : IEmailService
         var userName = smtpSettings["Username"];
         var password = smtpSettings["Password"];
         var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
+        var useMock = bool.TryParse(smtpSettings["UseMock"], out var mockEnabled) && mockEnabled;
 
         // During development, redirect all emails to the test email address
         IEnumerable<string> recipientEmails = toEmails;
@@ -115,13 +141,29 @@ public class EmailService : IEmailService
             }
         }
 
+        if (_environment.IsDevelopment() && useMock)
+        {
+            foreach (var email in recipientEmails.Where(e => !string.IsNullOrWhiteSpace(e)))
+            {
+                TestEmailStore.Record(new TestEmailEntry { ToEmail = email, Subject = subject });
+            }
+            return;
+        }
+
         using (var client = new SmtpClient(smtpHost, smtpPort))
         {
             client.EnableSsl = enableSsl;
             client.Credentials = new NetworkCredential(userName, password);
+            client.Timeout = 5000;
 
             foreach (var email in recipientEmails.Where(e => !string.IsNullOrWhiteSpace(e)))
             {
+                var testEmailEntry = new TestEmailEntry
+                {
+                    ToEmail = email,
+                    Subject = subject
+                };
+
                 using (var message = new MailMessage())
                 {
                     message.From = new MailAddress(fromEmail, fromName);
@@ -136,10 +178,14 @@ public class EmailService : IEmailService
                     }
                     catch (Exception ex)
                     {
+                        testEmailEntry.Status = "Failed";
+                        testEmailEntry.ErrorMessage = ex.Message;
                         Console.WriteLine($"Failed to send email to {email}: {ex.Message}");
                         // Log error but continue with other emails
                     }
                 }
+
+                TestEmailStore.Record(testEmailEntry);
             }
         }
     }

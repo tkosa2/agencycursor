@@ -14,10 +14,12 @@ public class DetailsModel : PageModel
     public DetailsModel(AgencyDbContext db) => _db = db;
 
     public Appointment? Appointment { get; set; }
-    public SelectList InterpreterList { get; set; } = null!;
+    public List<MatchedInterpreter> MatchedInterpreters { get; set; } = new List<MatchedInterpreter>();
+    public IList<InterpreterEmailLog> EmailLogs { get; set; } = new List<InterpreterEmailLog>();
+    public Dictionary<int, InterpreterResponse?> ResponsesByInterpreterId { get; set; } = new Dictionary<int, InterpreterResponse?>();
 
     [BindProperty]
-    public int? SelectedInterpreterId { get; set; }
+    public List<int> SelectedInterpreterIds { get; set; } = new List<int>();
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
@@ -34,27 +36,46 @@ public class DetailsModel : PageModel
     {
         if (id == null) return NotFound();
 
-        if (!SelectedInterpreterId.HasValue)
+        if (SelectedInterpreterIds == null || !SelectedInterpreterIds.Any())
         {
-            TempData["ErrorMessage"] = "Please select an interpreter.";
+            TempData["ErrorMessage"] = "Please select at least one interpreter.";
             // Reload data for the page
             await LoadAppointmentDataAsync(id.Value);
             return Page();
         }
 
-        var appointment = await _db.Appointments.FindAsync(id);
+        var appointment = await _db.Appointments
+            .Include(a => a.AppointmentInterpreters)
+            .FirstOrDefaultAsync(a => a.Id == id);
         if (appointment == null) return NotFound();
 
-        var interpreter = await _db.Interpreters.FindAsync(SelectedInterpreterId.Value);
-        if (interpreter == null)
+        var interpreters = await _db.Interpreters
+            .Where(i => SelectedInterpreterIds.Contains(i.Id))
+            .ToListAsync();
+        
+        if (!interpreters.Any())
         {
-            TempData["ErrorMessage"] = "Selected interpreter not found.";
+            TempData["ErrorMessage"] = "Selected interpreters not found.";
             // Reload data for the page
             await LoadAppointmentDataAsync(id.Value);
             return Page();
         }
 
-        appointment.InterpreterId = SelectedInterpreterId.Value;
+        // Clear existing assignments
+        _db.AppointmentInterpreters.RemoveRange(appointment.AppointmentInterpreters);
+        
+        // Add new assignments
+        foreach (var interpreterId in SelectedInterpreterIds)
+        {
+            appointment.AppointmentInterpreters.Add(new AppointmentInterpreter
+            {
+                AppointmentId = appointment.Id,
+                InterpreterId = interpreterId
+            });
+        }
+
+        // Set the primary interpreter (first selected)
+        appointment.InterpreterId = SelectedInterpreterIds.First();
         
         // Update status to "Assigned" or "Confirmed" if it was Pending
         if (appointment.Status == "Pending")
@@ -74,7 +95,8 @@ public class DetailsModel : PageModel
 
         await _db.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = $"Interpreter {interpreter.Name} has been assigned to this appointment.";
+        var interpreterNames = string.Join(", ", interpreters.Select(i => i.Name));
+        TempData["SuccessMessage"] = $"Interpreter(s) {interpreterNames} have been assigned to this appointment.";
         return RedirectToPage(new { id });
     }
 
@@ -83,21 +105,57 @@ public class DetailsModel : PageModel
         Appointment = await _db.Appointments
             .Include(a => a.Request)
             .ThenInclude(r => r!.Requestor)
-            .Include(a => a.Interpreter)
+            .Include(a => a.AppointmentInterpreters)
+            .ThenInclude(ai => ai.Interpreter)
             .FirstOrDefaultAsync(m => m.Id == id);
         
         if (Appointment != null)
         {
-            // Load registered interpreters for assignment
-            var interpreters = await _db.Interpreters
-                .Where(i => i.IsRegisteredWithAgency)
-                .OrderBy(i => i.Name)
+            // Load email logs for this appointment's request
+            EmailLogs = await _db.InterpreterEmailLogs
+                .Where(el => el.RequestId == Appointment.RequestId)
+                .Include(el => el.Interpreter)
+                .OrderByDescending(el => el.SentAt)
                 .ToListAsync();
-            
-            // Set SelectedInterpreterId for binding
-            SelectedInterpreterId = Appointment.InterpreterId;
-            // Create SelectList with the int value (not nullable) for proper selection
-            InterpreterList = new SelectList(interpreters, "Id", "Name", Appointment.InterpreterId);
+
+            // Load interpreter responses for this request
+            var responses = await _db.InterpreterResponses
+                .Where(ir => ir.RequestId == Appointment.RequestId)
+                .Include(ir => ir.Interpreter)
+                .ToListAsync();
+
+            ResponsesByInterpreterId = responses
+                .GroupBy(ir => ir.InterpreterId)
+                .ToDictionary(g => g.Key, g => (InterpreterResponse?)g.FirstOrDefault());
+
+            // Build list of matched interpreters who were contacted
+            var contactedInterpreterIds = EmailLogs.Select(el => el.InterpreterId).Distinct().ToList();
+            var interpreters = await _db.Interpreters
+                .Where(i => contactedInterpreterIds.Contains(i.Id))
+                .ToListAsync();
+
+            MatchedInterpreters = interpreters.Select(i => new MatchedInterpreter
+            {
+                Interpreter = i,
+                Response = ResponsesByInterpreterId.ContainsKey(i.Id) ? ResponsesByInterpreterId[i.Id] : null,
+                IsAssigned = Appointment.AppointmentInterpreters.Any(ai => ai.InterpreterId == i.Id)
+            })
+            .OrderByDescending(mi => mi.Response?.Status == "Yes")
+            .ThenByDescending(mi => mi.Response?.Status == "Maybe")
+            .ThenBy(mi => mi.Interpreter.Name)
+            .ToList();
+
+            // Pre-select currently assigned interpreters
+            SelectedInterpreterIds = Appointment.AppointmentInterpreters
+                .Select(ai => ai.InterpreterId)
+                .ToList();
         }
+    }
+
+    public class MatchedInterpreter
+    {
+        public Interpreter Interpreter { get; set; } = null!;
+        public InterpreterResponse? Response { get; set; }
+        public bool IsAssigned { get; set; }
     }
 }

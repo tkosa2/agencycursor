@@ -231,6 +231,7 @@ public class EditModel : PageModel
         existingRequest.GenderPreference = Request.GenderPreference;
         existingRequest.PreferredInterpreterName = Request.PreferredInterpreterName;
         existingRequest.PreferredInterpreterId = Request.PreferredInterpreterId;
+        existingRequest.ConsumerNames = Request.ConsumerNames;
         existingRequest.Specializations = Request.Specializations;
         existingRequest.InternationalOther = Request.InternationalOther;
         existingRequest.OtherInterpreter = Request.OtherInterpreter;

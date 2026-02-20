@@ -364,7 +364,6 @@ public static class MockDataGenerator
                         Status = status,
                         ServiceDetails = $"{request.TypeOfService} - {request.Specializations ?? "ASL"}",
                         DurationMinutes = duration,
-                        ClientEmployeeName = request.RequestName,
                         AdditionalNotes = request.AdditionalNotes
                     };
 

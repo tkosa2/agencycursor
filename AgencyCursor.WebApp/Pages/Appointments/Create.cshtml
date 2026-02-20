@@ -8,6 +8,10 @@
 @if (Model.Request != null)
 {
     <p class="text-muted">Request #@Model.Request.Id — @Model.Request.Requestor?.Name — @Model.Request.TypeOfService — @Model.Request.ServiceDateTime.ToString("g")</p>
+    @if (!string.IsNullOrWhiteSpace(Model.Request.ConsumerNames))
+    {
+        <p class="text-muted">Consumers: @Model.Request.ConsumerNames</p>
+    }
 }
 
 <form method="post">
@@ -27,11 +31,11 @@
         </div>
     }
     <div class="mb-2">
-        <label asp-for="Appointment.InterpreterId" class="form-label">Interpreter <span class="text-danger">*</span></label>
-        <select asp-for="Appointment.InterpreterId" class="form-select" asp-items="Model.InterpreterList">
-            <option value="0">-- Select Interpreter --</option>
+        <label asp-for="SelectedInterpreterIds" class="form-label">Interpreters (Team) <span class="text-danger">*</span></label>
+        <select asp-for="SelectedInterpreterIds" class="form-select" asp-items="Model.InterpreterList" multiple>
         </select>
-        <span asp-validation-for="Appointment.InterpreterId" class="text-danger"></span>
+        <small class="form-text text-muted">Select one or more interpreters for this appointment</small>
+        <span asp-validation-for="SelectedInterpreterIds" class="text-danger"></span>
     </div>
     <div class="mb-2">
         <label asp-for="Appointment.ServiceDateTime" class="form-label">Date and Time <span class="text-danger">*</span></label>
@@ -58,21 +62,15 @@
         <input asp-for="Appointment.DurationMinutes" class="form-control" type="number" />
     </div>
     <div class="mb-2">
-        <label asp-for="Appointment.ClientEmployeeName" class="form-label"></label>
-        <input asp-for="Appointment.ClientEmployeeName" class="form-control" />
-    </div>
-    <div class="mb-2">
         <label asp-for="Appointment.Status" class="form-label"></label>
         <select asp-for="Appointment.Status" class="form-select">
-            <option value="Assigned">Assigned</option>
             <option value="Confirmed">Confirmed</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled<48h">Cancelled (Less than 48 hours - Charge Applies)</option>
             <option value="Cancelled>48h">Cancelled (More than 48 hours - No Charge)</option>
-            <option value="Paid">Paid</option>
         </select>
         <small class="form-text text-muted">
-            <strong>Workflow:</strong> Assigned → Confirmed → Completed → Paid
+            <strong>Workflow:</strong> Confirmed → Completed
         </small>
     </div>
     <div class="mb-2">
@@ -90,18 +88,7 @@
             var startDatetime = $("#start-datetime");
             var endDatetime = $("#end-datetime");
             var durationInput = $("input[name='Appointment.DurationMinutes']");
-            var clientNameInput = $("input[name='Appointment.ClientEmployeeName']");
             var requestIdInput = $("input[name='Appointment.RequestId']");
-
-            // Pre-populate client name from request if available
-            function populateClientName() {
-                var requestId = requestIdInput.val();
-                if (requestId && requestId != "0") {
-                    // Try to get client name from the request data
-                    // This would need to be populated from the server or via AJAX
-                    // For now, we'll leave it for manual entry or server-side population
-                }
-            }
 
             // Calculate duration from start and end datetime
             function calculateDuration() {

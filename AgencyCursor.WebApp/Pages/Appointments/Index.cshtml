@@ -56,7 +56,29 @@
             <tr>
                 <td><a asp-page="/Requests/Details" asp-route-id="@a.RequestId">Request #@a.RequestId</a></td>
                 <td>@a.Request?.Requestor?.Name</td>
-                <td><a asp-page="/Interpreters/Details" asp-route-id="@a.InterpreterId">@a.Interpreter?.Name</a></td>
+                <td>
+                    @if (a.AppointmentInterpreters != null && a.AppointmentInterpreters.Any())
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var ai in a.AppointmentInterpreters.Take(2))
+                            {
+                                <li><a asp-page="/Interpreters/Details" asp-route-id="@ai.InterpreterId">@ai.Interpreter?.Name</a></li>
+                            }
+                            @if (a.AppointmentInterpreters.Count > 2)
+                            {
+                                <li><small class="text-muted">+@(a.AppointmentInterpreters.Count - 2) more</small></li>
+                            }
+                        </ul>
+                    }
+                    else if (a.Interpreter != null)
+                    {
+                        <a asp-page="/Interpreters/Details" asp-route-id="@a.InterpreterId">@a.Interpreter?.Name</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Not assigned</span>
+                    }
+                </td>
                 <td>@a.ServiceDateTime.ToString("g")</td>
                 <td>@a.Location</td>
                 <td>
@@ -64,9 +86,8 @@
                         var badgeClass = a.Status?.ToLower() switch
                         {
                             "pending" or "new" => "bg-warning text-dark",
-                            "assigned" or "confirmed" => "badge-aqua",
+                            "confirmed" => "badge-aqua",
                             "completed" or "cancelled<48h" => "bg-orange text-dark",
-                            "paid" => "bg-success",
                             "cancelled" or "cancelled>48h" => "bg-danger",
                             _ => "bg-secondary"
                         };

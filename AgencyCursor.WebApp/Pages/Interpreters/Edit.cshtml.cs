@@ -27,7 +27,23 @@ public class EditModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid) return Page();
-        _db.Attach(Interpreter).State = EntityState.Modified;
+        var existing = await _db.Interpreters.FirstOrDefaultAsync(i => i.Id == Interpreter.Id);
+        if (existing == null) return NotFound();
+
+        existing.Name = Interpreter.Name;
+        existing.Languages = Interpreter.Languages;
+        existing.Availability = Interpreter.Availability;
+        existing.HomePhone = Interpreter.HomePhone;
+        existing.BusinessPhone = Interpreter.BusinessPhone;
+        existing.MobilePhone = Interpreter.MobilePhone;
+        existing.Email = Interpreter.Email;
+        existing.AddressLine1 = Interpreter.AddressLine1;
+        existing.AddressLine2 = Interpreter.AddressLine2;
+        existing.City = Interpreter.City;
+        existing.State = Interpreter.State;
+        existing.ZipCode = Interpreter.ZipCode;
+        existing.Certification = Interpreter.Certification;
+        existing.Notes = Interpreter.Notes;
         try
         {
             await _db.SaveChangesAsync();
@@ -37,6 +53,6 @@ public class EditModel : PageModel
             if (!await _db.Interpreters.AnyAsync(x => x.Id == Interpreter.Id)) return NotFound();
             throw;
         }
-        return RedirectToPage("Index");
+        return RedirectToPage("Index", new { registeredOnly = true });
     }
 }

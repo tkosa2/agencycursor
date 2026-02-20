@@ -279,6 +279,71 @@ else
     }
 }
 
+<!-- Email Logs Section (Always Show) -->
+@if (Model.EmailLogs != null && Model.EmailLogs.Any())
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Sent & Response Emails</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Interpreter</th>
+                            <th>Sent At</th>
+                            <th>Email Status</th>
+                            <th>Response</th>
+                            <th>Error Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var email in Model.EmailLogs)
+                        {
+                            var interpreterResponse = Model.ResponsesByInterpreterId.ContainsKey(email.InterpreterId) 
+                                ? Model.ResponsesByInterpreterId[email.InterpreterId]
+                                : null;
+                            var responseBadgeClass = interpreterResponse?.Status switch
+                            {
+                                "Yes" => "bg-success",
+                                "Maybe" => "bg-warning text-dark",
+                                "No" => "bg-danger",
+                                _ => ""
+                            };
+                            <tr>
+                                <td>@email.Interpreter?.Name</td>
+                                <td>@email.SentAt.ToString("g")</td>
+                                <td>
+                                    @if (email.Status == "Success")
+                                    {
+                                        <span class="badge bg-success">Success</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (interpreterResponse != null)
+                                    {
+                                        <span class="badge @responseBadgeClass">@interpreterResponse.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>@email.ErrorMessage</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Notify Interpreters Modal -->
 <div class="modal fade" id="notifyInterpretersModal" tabindex="-1">
     <div class="modal-dialog modal-lg">

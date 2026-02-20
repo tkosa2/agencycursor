@@ -56,6 +56,80 @@ public static class InterpreterRegistrationService
                 }
             }
 
+            static object? GetValueIgnoreCase(Dictionary<string, object?> data, string key)
+            {
+                var matchKey = data.Keys.FirstOrDefault(k => k.Equals(key, StringComparison.OrdinalIgnoreCase));
+                return matchKey != null ? data.GetValueOrDefault(matchKey) : null;
+            }
+
+            static object? GetValueByPredicate(Dictionary<string, object?> data, Func<string, bool> predicate)
+            {
+                var matchKey = data.Keys.FirstOrDefault(predicate);
+                return matchKey != null ? data.GetValueOrDefault(matchKey) : null;
+            }
+
+            List<string> GetTableColumns(string sourceTableName)
+            {
+                using var tableInfoCommand = connection.CreateCommand();
+                tableInfoCommand.CommandText = $"PRAGMA table_info({sourceTableName});";
+                var tableColumns = new List<string>();
+                using var tableInfoReader = tableInfoCommand.ExecuteReader();
+                while (tableInfoReader.Read())
+                {
+                    tableColumns.Add(tableInfoReader.GetString(1));
+                }
+
+                return tableColumns;
+            }
+
+            static (string? mainJoinColumn, string? relatedJoinColumn) FindJoinColumns(
+                List<string> mainColumns,
+                List<string> relatedColumns)
+            {
+                var candidateNames = new[]
+                {
+                    "InterpreterId",
+                    "interpreter_id",
+                    "MemberId",
+                    "member_id",
+                    "RidId",
+                    "rid_id",
+                    "UserId",
+                    "user_id",
+                    "Id"
+                };
+
+                foreach (var candidate in candidateNames)
+                {
+                    var mainMatch = mainColumns.FirstOrDefault(c => c.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+                    var relatedMatch = relatedColumns.FirstOrDefault(c => c.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+                    if (mainMatch != null && relatedMatch != null)
+                    {
+                        return (mainMatch, relatedMatch);
+                    }
+                }
+
+                var relatedForeignKey = relatedColumns.FirstOrDefault(c =>
+                    c.Contains("interpreter", StringComparison.OrdinalIgnoreCase) &&
+                    c.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    ?? relatedColumns.FirstOrDefault(c =>
+                        c.Contains("member", StringComparison.OrdinalIgnoreCase) &&
+                        c.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    ?? relatedColumns.FirstOrDefault(c =>
+                        c.Contains("rid", StringComparison.OrdinalIgnoreCase) &&
+                        c.Contains("id", StringComparison.OrdinalIgnoreCase));
+
+                var mainId = mainColumns.FirstOrDefault(c => c.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                    ?? mainColumns.FirstOrDefault(c => c.EndsWith("Id", StringComparison.OrdinalIgnoreCase));
+
+                if (relatedForeignKey != null && mainId != null)
+                {
+                    return (mainId, relatedForeignKey);
+                }
+
+                return (null, null);
+            }
+
             // Find key columns for matching
             var nameColumn = columns.FirstOrDefault(c =>
                 c.ToLower() == "name" ||
@@ -67,12 +141,66 @@ public static class InterpreterRegistrationService
             var emailColumn = columns.FirstOrDefault(c => c.ToLower().Contains("email"));
             var phoneColumn = columns.FirstOrDefault(c => c.ToLower().Contains("phone") || c.ToLower().Contains("tel"));
 
+            var emailValue = GetValueByPredicate(ridInterpreterData, k => k.Contains("Email", StringComparison.OrdinalIgnoreCase))?.ToString();
+            var phoneValue = GetValueByPredicate(ridInterpreterData, k =>
+                k.Contains("Phone", StringComparison.OrdinalIgnoreCase) ||
+                k.Contains("Tel", StringComparison.OrdinalIgnoreCase) ||
+                k.Contains("Mobile", StringComparison.OrdinalIgnoreCase))?.ToString();
+
+            var idColumn = columns.FirstOrDefault(c =>
+                c.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
+                c.Equals("InterpreterId", StringComparison.OrdinalIgnoreCase) ||
+                c.Equals("MemberId", StringComparison.OrdinalIgnoreCase) ||
+                c.Equals("RidId", StringComparison.OrdinalIgnoreCase));
+            var idValue = idColumn != null ? GetValueIgnoreCase(ridInterpreterData, idColumn)?.ToString() : null;
+            if (string.IsNullOrWhiteSpace(idValue))
+            {
+                idValue = GetValueByPredicate(ridInterpreterData, k =>
+                    k.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
+                    k.Equals("InterpreterId", StringComparison.OrdinalIgnoreCase) ||
+                    k.Equals("MemberId", StringComparison.OrdinalIgnoreCase) ||
+                    k.Equals("RidId", StringComparison.OrdinalIgnoreCase))?.ToString();
+            }
+
+            var emailTableName = tables.FirstOrDefault(t =>
+                t.Equals("interpreter_emails", StringComparison.OrdinalIgnoreCase))
+                ?? tables.FirstOrDefault(t =>
+                    t.ToLower().Contains("email") &&
+                    !t.Equals(tableName, StringComparison.OrdinalIgnoreCase));
+            List<string> emailTableColumns = new();
+            string? emailTableEmailColumn = null;
+            string? emailTableJoinColumn = null;
+            string? emailMainJoinColumn = null;
+
+            if (!string.IsNullOrWhiteSpace(emailTableName))
+            {
+                emailTableColumns = GetTableColumns(emailTableName);
+                emailTableEmailColumn = emailTableColumns.FirstOrDefault(c =>
+                    c.ToLower() == "email" ||
+                    c.ToLower() == "emailaddress" ||
+                    c.ToLower() == "email_address" ||
+                    c.ToLower().Contains("email"));
+
+                var joinColumns = FindJoinColumns(columns, emailTableColumns);
+                emailMainJoinColumn = joinColumns.mainJoinColumn;
+                emailTableJoinColumn = joinColumns.relatedJoinColumn;
+            }
+            var useEmailTable = !string.IsNullOrWhiteSpace(emailTableName) &&
+                emailTableEmailColumn != null &&
+                emailMainJoinColumn != null &&
+                emailTableJoinColumn != null;
+
             // Build WHERE clause to find the exact interpreter
             var whereConditions = new List<string>();
             var parameters = new Dictionary<string, object?>();
 
-            // Try to match by name or email
-            if (ridInterpreterData.ContainsKey("Name") && !string.IsNullOrWhiteSpace(ridInterpreterData["Name"]?.ToString()))
+            // Try to match by ID, name, or email
+            if (!string.IsNullOrWhiteSpace(idValue) && idColumn != null)
+            {
+                whereConditions.Add($"{idColumn} = @id");
+                parameters["@id"] = idValue;
+            }
+            else if (ridInterpreterData.ContainsKey("Name") && !string.IsNullOrWhiteSpace(ridInterpreterData["Name"]?.ToString()))
             {
                 if (nameColumn != null)
                 {
@@ -94,52 +222,95 @@ public static class InterpreterRegistrationService
                     }
                 }
             }
-
-            if (ridInterpreterData.ContainsKey("Email") && !string.IsNullOrWhiteSpace(ridInterpreterData["Email"]?.ToString()) && emailColumn != null)
+            else
             {
-                whereConditions.Add($"{emailColumn} = @email");
-                parameters["@email"] = ridInterpreterData["Email"];
+                var firstNameValue = GetValueByPredicate(ridInterpreterData, k =>
+                    k.Contains("First", StringComparison.OrdinalIgnoreCase) &&
+                    k.Contains("Name", StringComparison.OrdinalIgnoreCase))?.ToString();
+                var lastNameValue = GetValueByPredicate(ridInterpreterData, k =>
+                    k.Contains("Last", StringComparison.OrdinalIgnoreCase) &&
+                    k.Contains("Name", StringComparison.OrdinalIgnoreCase))?.ToString();
+
+                if (!string.IsNullOrWhiteSpace(firstNameValue) && firstNameColumn != null)
+                {
+                    whereConditions.Add($"{firstNameColumn} = @firstName");
+                    parameters["@firstName"] = firstNameValue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(lastNameValue) && lastNameColumn != null)
+                {
+                    whereConditions.Add($"{lastNameColumn} = @lastName");
+                    parameters["@lastName"] = lastNameValue;
+                }
             }
 
-            if (!whereConditions.Any())
+            if (!string.IsNullOrWhiteSpace(emailValue))
             {
-                return null;
+                if (useEmailTable)
+                {
+                    whereConditions.Add($"EXISTS (SELECT 1 FROM {emailTableName} ie WHERE ie.{emailTableJoinColumn} = {tableName}.{emailMainJoinColumn} AND ie.{emailTableEmailColumn} = @email)");
+                    parameters["@email"] = emailValue;
+                }
+                else if (emailColumn != null)
+                {
+                    whereConditions.Add($"{emailColumn} = @email");
+                    parameters["@email"] = emailValue;
+                }
             }
 
-            // Get all data for this interpreter
-            var query = $"SELECT * FROM {tableName} WHERE {string.Join(" AND ", whereConditions)} LIMIT 1;";
-
-            using var command = connection.CreateCommand();
-            command.CommandText = query;
-            foreach (var param in parameters)
+            var allData = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            if (whereConditions.Any())
             {
-                command.Parameters.AddWithValue(param.Key, param.Value ?? DBNull.Value);
+                // Get all data for this interpreter
+                var query = $"SELECT * FROM {tableName} WHERE {string.Join(" AND ", whereConditions)} LIMIT 1;";
+
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+                foreach (var param in parameters)
+                {
+                    command.Parameters.AddWithValue(param.Key, param.Value ?? DBNull.Value);
+                }
+
+                using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    // Read all fields into a dictionary
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var columnName = reader.GetName(i);
+                        allData[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    }
+                }
             }
 
-            using var reader = await command.ExecuteReaderAsync();
-            if (!await reader.ReadAsync())
+            if (!allData.Any())
             {
-                return null;
-            }
-
-            // Read all fields into a dictionary
-            var allData = new Dictionary<string, object?>();
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                var columnName = reader.GetName(i);
-                allData[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                foreach (var item in ridInterpreterData)
+                {
+                    allData[item.Key] = item.Value;
+                }
             }
 
             // Extract common fields
             string name = "";
-            if (allData.ContainsKey(nameColumn ?? ""))
+            var nameValue = GetValueByPredicate(allData, k =>
+                k.Equals("Name", StringComparison.OrdinalIgnoreCase) ||
+                k.Contains("FullName", StringComparison.OrdinalIgnoreCase) ||
+                (k.Contains("Name", StringComparison.OrdinalIgnoreCase) &&
+                    !k.Contains("First", StringComparison.OrdinalIgnoreCase) &&
+                    !k.Contains("Last", StringComparison.OrdinalIgnoreCase)));
+            if (!string.IsNullOrWhiteSpace(nameValue?.ToString()))
             {
-                name = allData[nameColumn!]?.ToString()?.Trim() ?? "";
+                name = nameValue!.ToString()!.Trim();
             }
-            else if (allData.ContainsKey(firstNameColumn ?? "") || allData.ContainsKey(lastNameColumn ?? ""))
+            else
             {
-                var firstName = allData.GetValueOrDefault(firstNameColumn ?? "")?.ToString()?.Trim() ?? "";
-                var lastName = allData.GetValueOrDefault(lastNameColumn ?? "")?.ToString()?.Trim() ?? "";
+                var firstName = GetValueByPredicate(allData, k =>
+                    k.Contains("First", StringComparison.OrdinalIgnoreCase) &&
+                    k.Contains("Name", StringComparison.OrdinalIgnoreCase))?.ToString()?.Trim() ?? "";
+                var lastName = GetValueByPredicate(allData, k =>
+                    k.Contains("Last", StringComparison.OrdinalIgnoreCase) &&
+                    k.Contains("Name", StringComparison.OrdinalIgnoreCase))?.ToString()?.Trim() ?? "";
                 name = $"{firstName} {lastName}".Trim();
             }
 
@@ -149,7 +320,37 @@ public static class InterpreterRegistrationService
             }
 
             // Check if already exists in agency.db
-            var emailValue = allData.GetValueOrDefault(emailColumn ?? "")?.ToString();
+            emailValue ??= GetValueByPredicate(allData, k =>
+                k.Contains("Email", StringComparison.OrdinalIgnoreCase))?.ToString();
+            phoneValue ??= GetValueByPredicate(allData, k =>
+                k.Contains("Phone", StringComparison.OrdinalIgnoreCase) ||
+                k.Contains("Tel", StringComparison.OrdinalIgnoreCase) ||
+                k.Contains("Mobile", StringComparison.OrdinalIgnoreCase))?.ToString();
+
+            string? FindPhoneValue(string typeToken)
+            {
+                var result = GetValueByPredicate(allData, k =>
+                    k.Contains(typeToken, StringComparison.OrdinalIgnoreCase) &&
+                    (k.Contains("Phone", StringComparison.OrdinalIgnoreCase) ||
+                     k.Contains("Tel", StringComparison.OrdinalIgnoreCase) ||
+                     k.Contains("Mobile", StringComparison.OrdinalIgnoreCase) ||
+                     k.Contains("Cell", StringComparison.OrdinalIgnoreCase)))?.ToString();
+                
+                if (result != null)
+                {
+                    Console.WriteLine($"  Found {typeToken} phone: {result}");
+                }
+                return result;
+            }
+
+            Console.WriteLine($"\nExtracting phone values from RID data for: {name}");
+            Console.WriteLine($"  Available phone keys: {string.Join(", ", allData.Keys.Where(k => k.Contains("phone", StringComparison.OrdinalIgnoreCase)))}");
+            
+            var homePhone = FindPhoneValue("home");
+            var businessPhone = FindPhoneValue("business") ?? FindPhoneValue("work") ?? FindPhoneValue("office");
+            var mobilePhone = FindPhoneValue("mobile") ?? FindPhoneValue("cell");
+            
+            Console.WriteLine($"  Final values - Home: {homePhone ?? "NULL"}, Business: {businessPhone ?? "NULL"}, Mobile: {mobilePhone ?? "NULL"}");
             var existing = await db.Interpreters
                 .FirstOrDefaultAsync(i => i.Name == name || 
                     (!string.IsNullOrEmpty(i.Email) && !string.IsNullOrEmpty(emailValue) && i.Email == emailValue));
@@ -157,8 +358,11 @@ public static class InterpreterRegistrationService
             if (existing != null)
             {
                 // Update existing interpreter with RID data
-                existing.Email = allData.GetValueOrDefault(emailColumn ?? "")?.ToString() ?? existing.Email;
-                existing.Phone = allData.GetValueOrDefault(phoneColumn ?? "")?.ToString() ?? existing.Phone;
+                existing.Email = emailValue ?? existing.Email;
+                existing.Phone = phoneValue ?? allData.GetValueOrDefault(phoneColumn ?? "")?.ToString() ?? existing.Phone;
+                existing.HomePhone = homePhone ?? existing.HomePhone;
+                existing.BusinessPhone = businessPhone ?? existing.BusinessPhone;
+                existing.MobilePhone = mobilePhone ?? existing.MobilePhone;
                 existing.IsRegisteredWithAgency = true;
                 
                 // Store all RID data as JSON in Notes or create a separate field
@@ -173,8 +377,11 @@ public static class InterpreterRegistrationService
             var interpreter = new Interpreter
             {
                 Name = name,
-                Email = allData.GetValueOrDefault(emailColumn ?? "")?.ToString(),
-                Phone = allData.GetValueOrDefault(phoneColumn ?? "")?.ToString(),
+                Email = emailValue,
+                Phone = phoneValue ?? allData.GetValueOrDefault(phoneColumn ?? "")?.ToString(),
+                HomePhone = homePhone,
+                BusinessPhone = businessPhone,
+                MobilePhone = mobilePhone,
                 Certification = allData.FirstOrDefault(kv => 
                     kv.Key.ToLower().Contains("cert") || 
                     kv.Key.ToLower().Contains("credential") || 
@@ -197,6 +404,7 @@ public static class InterpreterRegistrationService
             return null;
         }
     }
+
 
     /// <summary>
     /// Searches interpreters from the RID database and registers them in the agency database.

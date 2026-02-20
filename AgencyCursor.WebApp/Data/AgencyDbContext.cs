@@ -12,6 +12,7 @@ public class AgencyDbContext : DbContext
     public DbSet<Interpreter> Interpreters => Set<Interpreter>();
     public DbSet<Request> Requests => Set<Request>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AppointmentInterpreter> AppointmentInterpreters => Set<AppointmentInterpreter>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<ZipCode> ZipCodes => Set<ZipCode>();
     public DbSet<InterpreterResponse> InterpreterResponses => Set<InterpreterResponse>();
@@ -37,10 +38,25 @@ public class AgencyDbContext : DbContext
             .HasForeignKey(a => a.RequestId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Old relationship - kept for backwards compatibility during migration
         modelBuilder.Entity<Appointment>()
             .HasOne(a => a.Interpreter)
-            .WithMany(i => i.Appointments)
+            .WithMany()
             .HasForeignKey(a => a.InterpreterId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        // New many-to-many relationship through AppointmentInterpreter
+        modelBuilder.Entity<AppointmentInterpreter>()
+            .HasOne(ai => ai.Appointment)
+            .WithMany(a => a.AppointmentInterpreters)
+            .HasForeignKey(ai => ai.AppointmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AppointmentInterpreter>()
+            .HasOne(ai => ai.Interpreter)
+            .WithMany(i => i.AppointmentInterpreters)
+            .HasForeignKey(ai => ai.InterpreterId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Invoice>()
@@ -60,5 +76,6 @@ public class AgencyDbContext : DbContext
             .WithMany(interp => interp.Invoices)
             .HasForeignKey(i => i.InterpreterId)
             .OnDelete(DeleteBehavior.Restrict);
+
     }
 }

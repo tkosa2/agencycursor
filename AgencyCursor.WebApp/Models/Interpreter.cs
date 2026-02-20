@@ -16,7 +16,20 @@ public class Interpreter
     public string? Availability { get; set; }
 
     [Phone, StringLength(50)]
+    [RegularExpression(@"^\D*(\d\D*){10}$", ErrorMessage = "Phone number must be 10 digits.")]
     public string? Phone { get; set; }
+
+    [Phone, StringLength(50)]
+    [RegularExpression(@"^\D*(\d\D*){10}$", ErrorMessage = "Phone number must be 10 digits.")]
+    public string? HomePhone { get; set; }
+
+    [Phone, StringLength(50)]
+    [RegularExpression(@"^\D*(\d\D*){10}$", ErrorMessage = "Phone number must be 10 digits.")]
+    public string? BusinessPhone { get; set; }
+
+    [Phone, StringLength(50)]
+    [RegularExpression(@"^\D*(\d\D*){10}$", ErrorMessage = "Phone number must be 10 digits.")]
+    public string? MobilePhone { get; set; }
 
     [EmailAddress, StringLength(200)]
     public string? Email { get; set; }
@@ -46,6 +59,9 @@ public class Interpreter
     public bool IsRegisteredWithAgency { get; set; } = false;
 
     public ICollection<Request> PreferredForRequests { get; set; } = new List<Request>();
-    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    
+    // Team appointments (many-to-many through AppointmentInterpreter)
+    public ICollection<AppointmentInterpreter> AppointmentInterpreters { get; set; } = new List<AppointmentInterpreter>();
+    
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

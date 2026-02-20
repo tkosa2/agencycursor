@@ -3,6 +3,7 @@ using System;
 using AgencyCursor.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgencyCursor.WebApp.Migrations
 {
     [DbContext(typeof(AgencyDbContext))]
-    partial class AgencyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260220013111_AddAppointmentInterpreterTeam")]
+    partial class AddAppointmentInterpreterTeam
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -25,6 +28,10 @@ namespace AgencyCursor.WebApp.Migrations
 
                     b.Property<string>("AdditionalNotes")
                         .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClientEmployeeName")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DurationMinutes")

@@ -12,10 +12,10 @@ public class Appointment
     [ForeignKey(nameof(RequestId))]
     public Request Request { get; set; } = null!;
 
-    [Required]
-    public int InterpreterId { get; set; }
+    // Keeping for backwards compatibility during migration, will be deprecated
+    public int? InterpreterId { get; set; }
     [ForeignKey(nameof(InterpreterId))]
-    public Interpreter Interpreter { get; set; } = null!;
+    public Interpreter? Interpreter { get; set; }
 
     [Display(Name = "Date and Time of Service")]
     public DateTime ServiceDateTime { get; set; }
@@ -32,11 +32,11 @@ public class Appointment
     [Display(Name = "Duration (minutes)")]
     public int? DurationMinutes { get; set; }
 
-    [Display(Name = "Client or Employee Name"), StringLength(200)]
-    public string? ClientEmployeeName { get; set; }
-
     [Display(Name = "Additional Notes"), StringLength(2000)]
     public string? AdditionalNotes { get; set; }
+
+    // Team of interpreters for this appointment
+    public ICollection<AppointmentInterpreter> AppointmentInterpreters { get; set; } = new List<AppointmentInterpreter>();
 
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }

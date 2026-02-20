@@ -17,10 +17,9 @@ public class Invoice
     [ForeignKey(nameof(AppointmentId))]
     public Appointment Appointment { get; set; } = null!;
 
-    [Required]
-    public int InterpreterId { get; set; }
+    public int? InterpreterId { get; set; }
     [ForeignKey(nameof(InterpreterId))]
-    public Interpreter Interpreter { get; set; } = null!;
+    public Interpreter? Interpreter { get; set; }
 
     [Display(Name = "Service Type"), StringLength(100)]
     public string? ServiceType { get; set; }

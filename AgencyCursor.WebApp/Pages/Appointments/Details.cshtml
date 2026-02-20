@@ -29,21 +29,64 @@
     </div>
     <div class="card-body">
         <form method="post" asp-page-handler="AssignInterpreter" asp-route-id="@Model.Appointment?.Id">
-            <div class="row align-items-end">
-                <div class="col-md-8">
-                    <label for="SelectedInterpreterId" class="form-label">Select Interpreter</label>
-                    <select asp-for="SelectedInterpreterId" class="form-select" id="SelectedInterpreterId" asp-items="Model.InterpreterList" required>
-                        <option value="">-- Select Interpreter --</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary w-100">Assign Interpreter</button>
-                </div>
-            </div>
-            @if (Model.Appointment?.Interpreter != null)
+            @if (Model.MatchedInterpreters != null && Model.MatchedInterpreters.Any())
             {
-                <div class="mt-3">
-                    <small class="text-muted">Currently assigned: <strong>@Model.Appointment.Interpreter.Name</strong></small>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Matched Interpreters:</label>
+                    <div class="border rounded">
+                        @for (int i = 0; i < Model.MatchedInterpreters.Count; i++)
+                        {
+                            var matched = Model.MatchedInterpreters[i];
+                            var responseBadgeClass = matched.Response?.Status switch
+                            {
+                                "Yes" => "bg-success",
+                                "Maybe" => "bg-warning text-dark",
+                                "No" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            var isChecked = matched.IsAssigned;
+                            var borderClass = i < Model.MatchedInterpreters.Count - 1 ? "border-bottom" : "";
+                            
+                            <div class="p-3 @borderClass">
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="SelectedInterpreterIds" 
+                                           value="@matched.Interpreter.Id" 
+                                           id="interpreter_@matched.Interpreter.Id"
+                                           @(isChecked ? "checked" : "")>
+                                    <label class="form-check-label w-100" for="interpreter_@matched.Interpreter.Id">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@matched.Interpreter.Name</strong>
+                                                <br />
+                                                <small class="text-muted">@matched.Interpreter.Email</small>
+                                            </div>
+                                            <div>
+                                                @if (matched.Response != null)
+                                                {
+                                                    <span class="badge @responseBadgeClass">@matched.Response.Status</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">No Response</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Assign Selected Interpreter(s)</button>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i> No matched interpreters found. Send emails to interpreters first to see matches here.
                 </div>
             }
         </form>
@@ -54,11 +97,19 @@
 <dl class="row">
     <dt class="col-sm-2">Request</dt>
     <dd class="col-sm-10"><a asp-page="/Requests/Details" asp-route-id="@Model.Appointment?.RequestId">Request #@Model.Appointment?.RequestId</a> — @Model.Appointment?.Request?.Requestor?.Name</dd>
-    <dt class="col-sm-2">Interpreter</dt>
+    <dt class="col-sm-2">Interpreter(s) (Team)</dt>
     <dd class="col-sm-10">
-        @if (Model.Appointment?.Interpreter != null)
+        @if (Model.Appointment?.AppointmentInterpreters != null && Model.Appointment.AppointmentInterpreters.Any())
         {
-            <a asp-page="/Interpreters/Details" asp-route-id="@Model.Appointment.InterpreterId">@Model.Appointment.Interpreter.Name</a>
+            <ul class="list-unstyled mb-0">
+                @foreach (var ai in Model.Appointment.AppointmentInterpreters)
+                {
+                    <li>
+                        <a asp-page="/Interpreters/Details" asp-route-id="@ai.InterpreterId">@ai.Interpreter?.Name</a>
+                        <small class="text-muted">(@ai.Interpreter?.Email)</small>
+                    </li>
+                }
+            </ul>
         }
         else
         {
@@ -67,19 +118,111 @@
     </dd>
     <dt class="col-sm-2">Date and Time</dt>
     <dd class="col-sm-10">@Model.Appointment?.ServiceDateTime.ToString("g")</dd>
+    <dt class="col-sm-2">End Time</dt>
+    <dd class="col-sm-10">@(Model.Appointment?.Request?.EndDateTime != null ? Model.Appointment.Request.EndDateTime.Value.ToString("g") : "—")</dd>
     <dt class="col-sm-2">Location</dt>
     <dd class="col-sm-10">@Model.Appointment?.Location</dd>
+    <dt class="col-sm-2">Address or Link</dt>
+    <dd class="col-sm-10">
+        @if (!string.IsNullOrWhiteSpace(Model.Appointment?.Request?.MeetingLink))
+        {
+            <a href="@Model.Appointment.Request.MeetingLink" target="_blank" rel="noopener">@Model.Appointment.Request.MeetingLink</a>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.Appointment?.Request?.Address))
+        {
+            <div>@Model.Appointment.Request.Address</div>
+            @if (!string.IsNullOrWhiteSpace(Model.Appointment.Request.Address2))
+            {
+                <div>@Model.Appointment.Request.Address2</div>
+            }
+            <div>@Model.Appointment.Request.City, @Model.Appointment.Request.State @Model.Appointment.Request.ZipCode</div>
+        }
+        else
+        {
+            <span class="text-muted">—</span>
+        }
+    </dd>
     <dt class="col-sm-2">Status</dt>
     <dd class="col-sm-10"><span class="badge bg-info">@Model.Appointment?.Status</span></dd>
     <dt class="col-sm-2">Service Details</dt>
     <dd class="col-sm-10">@Model.Appointment?.ServiceDetails</dd>
+    <dt class="col-sm-2">Gender Preference</dt>
+    <dd class="col-sm-10">@Model.Appointment?.Request?.GenderPreference</dd>
+    <dt class="col-sm-2">Specializations</dt>
+    <dd class="col-sm-10">@Model.Appointment?.Request?.Specializations</dd>
     <dt class="col-sm-2">Duration</dt>
     <dd class="col-sm-10">@(Model.Appointment?.DurationMinutes != null ? $"{Model.Appointment.DurationMinutes} min" : "—")</dd>
-    <dt class="col-sm-2">Client/Employee Name</dt>
-    <dd class="col-sm-10">@Model.Appointment?.ClientEmployeeName</dd>
+    <dt class="col-sm-2">Consumer Names</dt>
+    <dd class="col-sm-10">@Model.Appointment?.Request?.ConsumerNames</dd>
     <dt class="col-sm-2">Additional Notes</dt>
-    <dd class="col-sm-10">@Model.Appointment?.AdditionalNotes</dd>
+    <dd class="col-sm-10">@Model.Appointment?.Request?.AdditionalNotes</dd>
 </dl>
+
+<!-- Email Logs Section -->
+@if (Model.EmailLogs != null && Model.EmailLogs.Any())
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Sent & Response Emails</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Interpreter</th>
+                            <th>Sent At</th>
+                            <th>Email Status</th>
+                            <th>Response</th>
+                            <th>Error Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var email in Model.EmailLogs)
+                        {
+                            var interpreterResponse = Model.ResponsesByInterpreterId?.ContainsKey(email.InterpreterId) == true
+                                ? Model.ResponsesByInterpreterId[email.InterpreterId]
+                                : null;
+                            var responseBadgeClass = interpreterResponse?.Status switch
+                            {
+                                "Yes" => "bg-success",
+                                "Maybe" => "bg-warning text-dark",
+                                "No" => "bg-danger",
+                                _ => ""
+                            };
+                            <tr>
+                                <td>@email.Interpreter?.Name</td>
+                                <td>@email.SentAt.ToString("g")</td>
+                                <td>
+                                    @if (email.Status == "Success")
+                                    {
+                                        <span class="badge bg-success">Success</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (interpreterResponse != null)
+                                    {
+                                        <span class="badge @responseBadgeClass">@interpreterResponse.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>@email.ErrorMessage</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
 <p>
     <a asp-page="Edit" asp-route-id="@Model.Appointment?.Id" class="btn btn-primary">Edit</a>
     <a asp-page="/Invoices/Create" asp-route-appointmentId="@Model.Appointment?.Id" class="btn btn-success">Create Invoice</a>

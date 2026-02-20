@@ -1,0 +1,54 @@
+@page
+@model AgencyCursor.Pages.TestEmailLogModel
+@{
+    ViewData["Title"] = "Test Email Log";
+}
+
+<h1>Test Email Log</h1>
+<p class="text-muted">This page is for development and automated testing only.</p>
+
+@if (Model.Entries.Count == 0)
+{
+    <div class="alert alert-secondary">No emails recorded yet.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Sent At (UTC)</th>
+                    <th>To</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Request</th>
+                    <th>Interpreter</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.Entries)
+                {
+                    <tr>
+                        <td>@entry.SentAt.ToString("g")</td>
+                        <td>@entry.ToEmail</td>
+                        <td>@entry.Subject</td>
+                        <td>
+                            @if (entry.Status == "Success")
+                            {
+                                <span class="badge bg-success">Success</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Failed</span>
+                            }
+                        </td>
+                        <td>@(entry.RequestId?.ToString() ?? "-")</td>
+                        <td>@(entry.InterpreterId?.ToString() ?? "-")</td>
+                        <td>@(string.IsNullOrEmpty(entry.ErrorMessage) ? "-" : entry.ErrorMessage)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

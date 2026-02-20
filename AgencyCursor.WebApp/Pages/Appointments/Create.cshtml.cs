@@ -26,6 +26,9 @@ public class CreateModel : PageModel
     [BindProperty]
     public Appointment Appointment { get; set; } = null!;
 
+    [BindProperty]
+    public List<int> SelectedInterpreterIds { get; set; } = new();
+
     public new Request? Request { get; set; }
     public DateTime? RequestEndDateTime { get; set; }
     public SelectList InterpreterList { get; set; } = null!;
@@ -52,11 +55,10 @@ public class CreateModel : PageModel
                 ServiceDateTime = Request.ServiceDateTime,
                 Location = Request.Location ?? "",
                 ServiceDetails = Request.TypeOfService,
-                Status = "Pending",
-                ClientEmployeeName = Request.ConsumerNames ?? ""
+                Status = "Pending"
             };
             if (Request.PreferredInterpreterId.HasValue)
-                Appointment.InterpreterId = Request.PreferredInterpreterId.Value;
+                SelectedInterpreterIds = new List<int> { Request.PreferredInterpreterId.Value };
         }
         else
         {
@@ -77,23 +79,28 @@ public class CreateModel : PageModel
         ModelState.Remove("Appointment.InterpreterId");
         ModelState.Remove("Appointment.RequestId");
         ModelState.Remove("Appointment.ServiceDateTime");
+        ModelState.Remove("Appointment.AppointmentInterpreters");
 
         // Validate required fields explicitly
         bool hasErrors = false;
 
-        // Check InterpreterId - must be greater than 0
-        if (Appointment.InterpreterId <= 0)
+        // Check SelectedInterpreterIds - must have at least one
+        if (SelectedInterpreterIds == null || !SelectedInterpreterIds.Any())
         {
-            ModelState.AddModelError("Appointment.InterpreterId", "Please select an interpreter.");
+            ModelState.AddModelError("SelectedInterpreterIds", "Please select at least one interpreter.");
             hasErrors = true;
         }
         else
         {
-            // Verify interpreter exists and is registered
-            var interpreterExists = await _db.Interpreters.AnyAsync(i => i.Id == Appointment.InterpreterId && i.IsRegisteredWithAgency);
-            if (!interpreterExists)
+            // Verify all selected interpreters exist and are registered
+            var validInterpreterIds = await _db.Interpreters
+                .Where(i => i.IsRegisteredWithAgency && SelectedInterpreterIds.Contains(i.Id))
+                .Select(i => i.Id)
+                .ToListAsync();
+            
+            if (validInterpreterIds.Count != SelectedInterpreterIds.Count)
             {
-                ModelState.AddModelError("Appointment.InterpreterId", "Selected interpreter is not registered with the agency.");
+                ModelState.AddModelError("SelectedInterpreterIds", "One or more selected interpreters are not registered with the agency.");
                 hasErrors = true;
             }
         }
@@ -159,7 +166,7 @@ public class CreateModel : PageModel
                     ServiceDateTime = Appointment.ServiceDateTime,
                     Location = Appointment.Location,
                     TypeOfService = Appointment.ServiceDetails ?? "Admin Created",
-                    Status = "Assigned"
+                    Status = "Confirmed"
                 };
                 _db.Requests.Add(request);
                 await _db.SaveChangesAsync();
@@ -172,11 +179,22 @@ public class CreateModel : PageModel
                 request = await _db.Requests.FindAsync(Appointment.RequestId);
                 if (request != null)
                 {
-                    request.Status = "Assigned";
+                    request.Status = "Confirmed";
                 }
             }
 
             _db.Appointments.Add(Appointment);
+            await _db.SaveChangesAsync();
+
+            // Add interpreters to the appointment
+            foreach (var interpreterId in SelectedInterpreterIds)
+            {
+                _db.AppointmentInterpreters.Add(new AppointmentInterpreter
+                {
+                    AppointmentId = Appointment.Id,
+                    InterpreterId = interpreterId
+                });
+            }
             await _db.SaveChangesAsync();
 
             // Send confirmation email to requestor
@@ -184,7 +202,8 @@ public class CreateModel : PageModel
             {
                 // Reload appointment with full navigation properties
                 var savedAppointment = await _db.Appointments
-                    .Include(a => a.Interpreter)
+                    .Include(a => a.AppointmentInterpreters)
+                    .ThenInclude(ai => ai.Interpreter)
                     .Include(a => a.Request)
                     .ThenInclude(r => r.Requestor)
                     .FirstOrDefaultAsync(a => a.Id == Appointment.Id);
@@ -201,7 +220,7 @@ public class CreateModel : PageModel
                         var confirmationEmail = BuildAppointmentConfirmationEmail(savedAppointment);
                         await _emailService.SendEmailAsync(
                             recipientEmail,
-                            $"Appointment Confirmed - Interpreter Booked for {savedAppointment.ServiceDateTime:d}",
+                            $"Appointment Confirmed - Interpreter(s) Booked for {savedAppointment.ServiceDateTime:d}",
                             confirmationEmail);
                     }
                 }
@@ -229,7 +248,7 @@ public class CreateModel : PageModel
             .Where(i => i.IsRegisteredWithAgency)
             .OrderBy(i => i.Name)
             .ToListAsync();
-        InterpreterList = new SelectList(interpreters, "Id", "Name", Appointment.InterpreterId);
+        InterpreterList = new SelectList(interpreters, "Id", "Name");
         var requests = await _db.Requests.Include(r => r.Requestor).OrderByDescending(r => r.ServiceDateTime).ToListAsync();
         RequestList = new SelectList(requests.Select(r => new { r.Id, Display = $"#{r.Id} - {r.Requestor?.Name} - {r.ServiceDateTime:g}" }), "Id", "Display");
         Request = await _db.Requests.Include(r => r.Requestor).FirstOrDefaultAsync(r => r.Id == Appointment.RequestId);
@@ -238,7 +257,8 @@ public class CreateModel : PageModel
     private string BuildAppointmentConfirmationEmail(Appointment appointment)
     {
         var requestor = appointment.Request?.Requestor;
-        var interpreter = appointment.Interpreter;
+        var interpreters = appointment.AppointmentInterpreters.Select(ai => ai.Interpreter).ToList();
+        var interpreterList = string.Join(", ", interpreters.Select(i => $"{i.Name} ({i.Email ?? i.Phone})"));
         
         return $@"
 <!DOCTYPE html>
@@ -253,6 +273,7 @@ public class CreateModel : PageModel
         .label {{ font-weight: bold; color: #0D6EFD; }}
         .badge {{ display: inline-block; padding: 5px 10px; background-color: #28A745; color: white; border-radius: 3px; }}
         .details {{ background-color: white; padding: 15px; border-left: 4px solid #0D6EFD; margin: 10px 0; }}
+        .interpreter-item {{ padding: 10px; margin: 5px 0; background-color: #f0f0f0; border-radius: 3px; }}
         .footer {{ text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
     </style>
 </head>
@@ -260,7 +281,7 @@ public class CreateModel : PageModel
     <div class=""container"">
         <div class=""header"">
             <h1>Appointment Confirmed!</h1>
-            <p>Your interpreter has been successfully booked</p>
+            <p>Your interpreter(s) have been successfully booked</p>
         </div>
 
         <div class=""content"">
@@ -278,11 +299,15 @@ public class CreateModel : PageModel
                 </div>
 
                 <div class=""section"">
-                    <span class=""label"">Interpreter:</span> {interpreter?.Name}
-                </div>
-
-                <div class=""section"">
-                    <span class=""label"">Contact:</span> {interpreter?.Email} | {interpreter?.Phone}
+                    <span class=""label"">Interpreter(s):</span>
+                    <div>
+                        {string.Join("", interpreters.Select(i => $@"
+                        <div class=""interpreter-item"">
+                            <strong>{i.Name}</strong><br/>
+                            Email: {i.Email}<br/>
+                            Phone: {i.Phone}
+                        </div>"))}
+                    </div>
                 </div>
 
                 <div class=""section"">
@@ -292,18 +317,15 @@ public class CreateModel : PageModel
                 <div class=""section"">
                     <span class=""label"">Location:</span> {appointment.Location ?? "Virtual/Remote"}
                 </div>
-
-                @if (!string.IsNullOrEmpty(appointment.AdditionalNotes))
-                {{
-                    <div class=""section"">
-                        <span class=""label"">Additional Notes:</span> {appointment.AdditionalNotes}
-                    </div>
-                }}
+                {(string.IsNullOrEmpty(appointment.AdditionalNotes) ? "" : $@"
+                <div class=""section"">
+                    <span class=""label"">Additional Notes:</span> {appointment.AdditionalNotes}
+                </div>")}
             </div>
 
             <p><strong>Next Steps:</strong></p>
             <ul>
-                <li>The assigned interpreter will contact you to confirm any final details</li>
+                <li>The assigned interpreter(s) will contact you to confirm any final details</li>
                 <li>Please ensure you have any necessary materials or setup ready</li>
                 <li>If you need to make changes, please contact us as soon as possible</li>
             </ul>

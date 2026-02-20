@@ -68,38 +68,29 @@ public class PlaywrightFixture : IAsyncLifetime
             throw new InvalidOperationException($"Web application directory not found at: {webAppDir}");
         }
 
-        // Check if web app is already built, build only if needed
-        var webAppDll = Path.Combine(webAppDir, "bin", "Debug", "net8.0", "AgencyCursor.WebApp.dll");
-        if (!File.Exists(webAppDll))
+        Console.WriteLine("Building web application...");
+        var buildProcess = Process.Start(new ProcessStartInfo
         {
-            Console.WriteLine("Web application not built. Building now...");
-            var buildProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = "build --configuration Debug --no-restore",
-                WorkingDirectory = webAppDir,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            });
+            FileName = "dotnet",
+            Arguments = "build --configuration Debug --no-restore",
+            WorkingDirectory = webAppDir,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        });
 
-            if (buildProcess == null || !buildProcess.WaitForExit(60000))
-            {
-                buildProcess?.Kill(entireProcessTree: true);
-                throw new TimeoutException("Web application build timed out after 60 seconds");
-            }
-
-            if (buildProcess.ExitCode != 0)
-            {
-                throw new InvalidOperationException("Failed to build web application");
-            }
-            Console.WriteLine("Web application built successfully");
-        }
-        else
+        if (buildProcess == null || !buildProcess.WaitForExit(180000))
         {
-            Console.WriteLine("Using pre-built web application...");
+            buildProcess?.Kill(entireProcessTree: true);
+            throw new TimeoutException("Web application build timed out after 180 seconds");
         }
+
+        if (buildProcess.ExitCode != 0)
+        {
+            throw new InvalidOperationException("Failed to build web application");
+        }
+        Console.WriteLine("Web application built successfully");
 
         // Start the web application process
         var startInfo = new ProcessStartInfo
@@ -112,6 +103,9 @@ public class PlaywrightFixture : IAsyncLifetime
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
+
+        startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+        startInfo.Environment["DOTNET_ENVIRONMENT"] = "Development";
 
         _webAppProcess = Process.Start(startInfo);
         

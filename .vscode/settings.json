@@ -7,6 +7,13 @@
             "name": "agencydb",
             "group": "agency",
             "database": "agencycursor.webapp/agency.db"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "rid",
+            "group": "ridconn",
+            "database": "rid_interpreters.db"
         }
     ]
 }

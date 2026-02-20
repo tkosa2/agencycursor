@@ -10,6 +10,7 @@ public static class RidInterpreterService
         string? firstName = null,
         string? lastName = null,
         string? email = null,
+        string? phone = null,
         string? city = null,
         string? state = null,
         string? zipCode = null,
@@ -66,6 +67,68 @@ public static class RidInterpreterService
                 }
             }
 
+            List<string> GetTableColumns(string sourceTableName)
+            {
+                using var tableInfoCommand = connection.CreateCommand();
+                tableInfoCommand.CommandText = $"PRAGMA table_info({sourceTableName});";
+                var tableColumns = new List<string>();
+                using var tableInfoReader = tableInfoCommand.ExecuteReader();
+                while (tableInfoReader.Read())
+                {
+                    tableColumns.Add(tableInfoReader.GetString(1));
+                }
+
+                return tableColumns;
+            }
+
+            static (string? mainJoinColumn, string? relatedJoinColumn) FindJoinColumns(
+                List<string> mainColumns,
+                List<string> relatedColumns)
+            {
+                var candidateNames = new[]
+                {
+                    "InterpreterId",
+                    "interpreter_id",
+                    "MemberId",
+                    "member_id",
+                    "RidId",
+                    "rid_id",
+                    "UserId",
+                    "user_id",
+                    "Id"
+                };
+
+                foreach (var candidate in candidateNames)
+                {
+                    var mainMatch = mainColumns.FirstOrDefault(c => c.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+                    var relatedMatch = relatedColumns.FirstOrDefault(c => c.Equals(candidate, StringComparison.OrdinalIgnoreCase));
+                    if (mainMatch != null && relatedMatch != null)
+                    {
+                        return (mainMatch, relatedMatch);
+                    }
+                }
+
+                var relatedForeignKey = relatedColumns.FirstOrDefault(c =>
+                    c.Contains("interpreter", StringComparison.OrdinalIgnoreCase) &&
+                    c.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    ?? relatedColumns.FirstOrDefault(c =>
+                        c.Contains("member", StringComparison.OrdinalIgnoreCase) &&
+                        c.Contains("id", StringComparison.OrdinalIgnoreCase))
+                    ?? relatedColumns.FirstOrDefault(c =>
+                        c.Contains("rid", StringComparison.OrdinalIgnoreCase) &&
+                        c.Contains("id", StringComparison.OrdinalIgnoreCase));
+
+                var mainId = mainColumns.FirstOrDefault(c => c.Equals("Id", StringComparison.OrdinalIgnoreCase))
+                    ?? mainColumns.FirstOrDefault(c => c.EndsWith("Id", StringComparison.OrdinalIgnoreCase));
+
+                if (relatedForeignKey != null && mainId != null)
+                {
+                    return (mainId, relatedForeignKey);
+                }
+
+                return (null, null);
+            }
+
             // Debug: Log available columns (only in development)
             if (columns.Any())
             {
@@ -100,6 +163,90 @@ public static class RidInterpreterService
                 c.ToLower() == "emailaddress" ||
                 c.ToLower() == "email_address" ||
                 c.ToLower().Contains("email"));
+            var emailTableName = tables.FirstOrDefault(t =>
+                t.Equals("interpreter_emails", StringComparison.OrdinalIgnoreCase))
+                ?? tables.FirstOrDefault(t =>
+                    t.ToLower().Contains("email") &&
+                    !t.Equals(tableName, StringComparison.OrdinalIgnoreCase));
+            List<string> emailTableColumns = new();
+            string? emailTableEmailColumn = null;
+            string? emailTableJoinColumn = null;
+            string? emailMainJoinColumn = null;
+
+            if (!string.IsNullOrWhiteSpace(emailTableName))
+            {
+                emailTableColumns = GetTableColumns(emailTableName);
+                emailTableEmailColumn = emailTableColumns.FirstOrDefault(c =>
+                    c.ToLower() == "email" ||
+                    c.ToLower() == "emailaddress" ||
+                    c.ToLower() == "email_address" ||
+                    c.ToLower().Contains("email"));
+
+                var joinColumns = FindJoinColumns(columns, emailTableColumns);
+                emailMainJoinColumn = joinColumns.mainJoinColumn;
+                emailTableJoinColumn = joinColumns.relatedJoinColumn;
+            }
+            var useEmailTable = !string.IsNullOrWhiteSpace(emailTableName) &&
+                emailTableEmailColumn != null &&
+                emailMainJoinColumn != null &&
+                emailTableJoinColumn != null;
+
+            var phoneTableName = tables.FirstOrDefault(t =>
+                t.Equals("interpreter_phones", StringComparison.OrdinalIgnoreCase))
+                ?? tables.FirstOrDefault(t =>
+                    t.ToLower().Contains("phone") &&
+                    !t.Equals(tableName, StringComparison.OrdinalIgnoreCase));
+            List<string> phoneTableColumns = new();
+            List<string> phoneTablePhoneColumns = new();
+            string? phoneTableJoinColumn = null;
+            string? phoneMainJoinColumn = null;
+
+            if (!string.IsNullOrWhiteSpace(phoneTableName))
+            {
+                phoneTableColumns = GetTableColumns(phoneTableName);
+                phoneTablePhoneColumns = phoneTableColumns
+                    .Where(c =>
+                        c.Contains("phone", StringComparison.OrdinalIgnoreCase) ||
+                        c.Contains("mobile", StringComparison.OrdinalIgnoreCase) ||
+                        c.Contains("cell", StringComparison.OrdinalIgnoreCase) ||
+                        c.Contains("tel", StringComparison.OrdinalIgnoreCase) ||
+                        c.Contains("number", StringComparison.OrdinalIgnoreCase))
+                    .Where(c =>
+                        !c.Contains("type", StringComparison.OrdinalIgnoreCase) &&
+                        !c.Contains("kind", StringComparison.OrdinalIgnoreCase))
+                    .Distinct()
+                    .ToList();
+
+                var phoneTableTypeColumn = phoneTableColumns.FirstOrDefault(c =>
+                    c.Contains("type", StringComparison.OrdinalIgnoreCase) ||
+                    c.Contains("kind", StringComparison.OrdinalIgnoreCase));
+
+                var joinColumns = FindJoinColumns(columns, phoneTableColumns);
+                phoneMainJoinColumn = joinColumns.mainJoinColumn;
+                phoneTableJoinColumn = joinColumns.relatedJoinColumn;
+            }
+
+            var usePhoneTable = !string.IsNullOrWhiteSpace(phoneTableName) &&
+                phoneTablePhoneColumns.Any() &&
+                phoneMainJoinColumn != null &&
+                phoneTableJoinColumn != null;
+            
+            // Debug: Log phone table detection
+            Console.WriteLine($"Phone table detection:");
+            Console.WriteLine($"  phoneTableName: {phoneTableName ?? "NULL"}");
+            Console.WriteLine($"  phoneTablePhoneColumns: {(phoneTablePhoneColumns.Any() ? string.Join(", ", phoneTablePhoneColumns) : "NONE")}");
+            Console.WriteLine($"  phoneMainJoinColumn: {phoneMainJoinColumn ?? "NULL"}");
+            Console.WriteLine($"  phoneTableJoinColumn: {phoneTableJoinColumn ?? "NULL"}");
+            Console.WriteLine($"  usePhoneTable: {usePhoneTable}");
+            
+            var phoneColumns = columns
+                .Where(c =>
+                    c.ToLower().Contains("phone") ||
+                    c.ToLower().Contains("mobile") ||
+                    c.ToLower().Contains("cell") ||
+                    c.ToLower().Contains("tel"))
+                .Distinct()
+                .ToList();
             var cityColumn = columns.FirstOrDefault(c => 
                 c.ToLower() == "city" ||
                 c.ToLower().Contains("city"));
@@ -145,10 +292,45 @@ public static class RidInterpreterService
                 parameters["@lastName"] = $"%{lastName}%";
             }
 
-            if (!string.IsNullOrWhiteSpace(email) && emailColumn != null)
+            if (!string.IsNullOrWhiteSpace(email))
             {
-                whereConditions.Add($"LOWER({emailColumn}) LIKE LOWER(@email)");
-                parameters["@email"] = $"%{email}%";
+                if (useEmailTable)
+                {
+                    whereConditions.Add($"EXISTS (SELECT 1 FROM {emailTableName} ie WHERE ie.{emailTableJoinColumn} = {tableName}.{emailMainJoinColumn} AND LOWER(ie.{emailTableEmailColumn}) LIKE LOWER(@email))");
+                    parameters["@email"] = $"%{email}%";
+                }
+                else if (emailColumn != null)
+                {
+                    whereConditions.Add($"LOWER({emailColumn}) LIKE LOWER(@email)");
+                    parameters["@email"] = $"%{email}%";
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(phone) && (phoneColumns.Any() || usePhoneTable))
+            {
+                if (usePhoneTable)
+                {
+                    var phoneConditionParts = new List<string>();
+                    foreach (var phoneColumn in phoneTablePhoneColumns)
+                    {
+                        phoneConditionParts.Add($"LOWER(ip.{phoneColumn}) LIKE LOWER(@phone)");
+                    }
+
+                    whereConditions.Add($"EXISTS (SELECT 1 FROM {phoneTableName} ip WHERE ip.{phoneTableJoinColumn} = {tableName}.{phoneMainJoinColumn} AND ({string.Join(" OR ", phoneConditionParts)}))");
+                    parameters["@phone"] = $"%{phone}%";
+                }
+                else
+                {
+                    var phoneConditionParts = new List<string>();
+                    for (var i = 0; i < phoneColumns.Count; i++)
+                    {
+                        var paramName = $"@phone{i}";
+                        phoneConditionParts.Add($"LOWER({phoneColumns[i]}) LIKE LOWER({paramName})");
+                        parameters[paramName] = $"%{phone}%";
+                    }
+
+                    whereConditions.Add($"({string.Join(" OR ", phoneConditionParts)})");
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(city) && cityColumn != null)
@@ -286,12 +468,98 @@ public static class RidInterpreterService
             // Build SELECT with all available columns
             var selectColumns = columns.Where(c => !string.IsNullOrEmpty(c)).ToList();
 
+            if (useEmailTable)
+            {
+                selectColumns = selectColumns
+                    .Where(c => !c.Contains("email", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                selectColumns.Add($"(SELECT ie.{emailTableEmailColumn} FROM {emailTableName} ie WHERE ie.{emailTableJoinColumn} = {tableName}.{emailMainJoinColumn} LIMIT 1) AS Email");
+            }
+
+            if (usePhoneTable)
+            {
+                selectColumns = selectColumns
+                    .Where(c =>
+                        !c.Contains("phone", StringComparison.OrdinalIgnoreCase) &&
+                        !c.Contains("mobile", StringComparison.OrdinalIgnoreCase) &&
+                        !c.Contains("cell", StringComparison.OrdinalIgnoreCase) &&
+                        !c.Contains("tel", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                // Check if phone_type column exists
+                var phoneTypeColumn = phoneTableColumns.FirstOrDefault(c => 
+                    c.Equals("phone_type", StringComparison.OrdinalIgnoreCase) ||
+                    (c.Contains("type", StringComparison.OrdinalIgnoreCase) && c.Contains("phone", StringComparison.OrdinalIgnoreCase)));
+                
+                var phoneNumberColumn = phoneTablePhoneColumns.FirstOrDefault(c => 
+                    c.Contains("number", StringComparison.OrdinalIgnoreCase)) ?? phoneTablePhoneColumns.FirstOrDefault();
+
+                if (phoneTypeColumn != null && phoneNumberColumn != null)
+                {
+                    Console.WriteLine($"  Using phone_type column: {phoneTypeColumn}, phone_number column: {phoneNumberColumn}");
+                    
+                    // Add subqueries for each phone type (home, business, mobile, other, etc.)
+                    var phoneTypes = new[] { "home", "business", "mobile", "work", "cell", "other" };
+                    
+                    foreach (var phoneType in phoneTypes)
+                    {
+                        var aliasName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(phoneType) + "Phone";
+                        var subquery = $"(SELECT ip.{phoneNumberColumn} FROM {phoneTableName} ip WHERE ip.{phoneTableJoinColumn} = {tableName}.{phoneMainJoinColumn} AND LOWER(ip.{phoneTypeColumn}) = '{phoneType.ToLower()}' LIMIT 1) AS {aliasName}";
+                        selectColumns.Add(subquery);
+                        Console.WriteLine($"  Added {aliasName} subquery");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"  No phone_type column found, using column names for aliases");
+                    // Fallback: Add subqueries for ALL phone columns found in interpreter_phones table
+                    foreach (var phoneCol in phoneTablePhoneColumns)
+                    {
+                        // Create a clean alias name (e.g., homephone -> Homephone, businessphone -> Businessphone)
+                        var aliasName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(phoneCol.ToLower().Replace("_", ""));
+                        var subquery = $"(SELECT ip.{phoneCol} FROM {phoneTableName} ip WHERE ip.{phoneTableJoinColumn} = {tableName}.{phoneMainJoinColumn} LIMIT 1) AS {aliasName}";
+                        selectColumns.Add(subquery);
+                        Console.WriteLine($"  Added {aliasName} subquery");
+                    }
+                }
+
+                // Also add concatenated Phone for backward compatibility (but use phone_type if available)
+                if (phoneTypeColumn != null && phoneNumberColumn != null)
+                {
+                    // Use phone_type for better display
+                    var phoneUnion = $"SELECT ip.{phoneTypeColumn} || ': ' || ip.{phoneNumberColumn} AS PhoneValue FROM {phoneTableName} ip WHERE ip.{phoneTableJoinColumn} = {tableName}.{phoneMainJoinColumn}";
+                    selectColumns.Add($"(SELECT group_concat(PhoneValue, '; ') FROM ({phoneUnion}) WHERE PhoneValue IS NOT NULL AND PhoneValue <> '') AS Phone");
+                }
+                else
+                {
+                    // Fallback to original logic
+                    var phoneTableTypeColumn = phoneTableColumns.FirstOrDefault(c =>
+                        c.Contains("type", StringComparison.OrdinalIgnoreCase) ||
+                        c.Contains("kind", StringComparison.OrdinalIgnoreCase));
+                    var phoneDisplayExpressions = phoneTablePhoneColumns
+                        .Select(phoneColumn =>
+                            phoneTableTypeColumn == null
+                                ? $"ip.{phoneColumn}"
+                                : $"ip.{phoneTableTypeColumn} || ': ' || ip.{phoneColumn}")
+                        .ToList();
+
+                    var phoneUnion = string.Join(
+                        " UNION ALL ",
+                        phoneDisplayExpressions.Select(expression =>
+                            $"SELECT {expression} AS PhoneValue FROM {phoneTableName} ip WHERE ip.{phoneTableJoinColumn} = {tableName}.{phoneMainJoinColumn}"));
+
+                    selectColumns.Add($"(SELECT group_concat(PhoneValue, '; ') FROM ({phoneUnion}) WHERE PhoneValue IS NOT NULL AND PhoneValue <> '') AS Phone");
+                }
+            }
+
             var query = $"SELECT {string.Join(", ", selectColumns)} FROM {tableName}";
             if (whereConditions.Any())
             {
                 query += " WHERE " + string.Join(" AND ", whereConditions);
             }
             query += " LIMIT 1000;";
+
+            Console.WriteLine($"\nExecuting RID query:\n{query}\n");
 
             using var command = connection.CreateCommand();
             command.CommandText = query;
@@ -309,6 +577,17 @@ public static class RidInterpreterService
                     var columnName = reader.GetName(i);
                     row[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
                 }
+                
+                // Debug: Log phone values for first result
+                if (results.Count == 0)
+                {
+                    Console.WriteLine($"\nFirst result phone values:");
+                    Console.WriteLine($"  HomePhone: {row.GetValueOrDefault("HomePhone")?.ToString() ?? "NULL"}");
+                    Console.WriteLine($"  BusinessPhone: {row.GetValueOrDefault("BusinessPhone")?.ToString() ?? "NULL"}");
+                    Console.WriteLine($"  MobilePhone: {row.GetValueOrDefault("MobilePhone")?.ToString() ?? "NULL"}");
+                    Console.WriteLine($"  Phone: {row.GetValueOrDefault("Phone")?.ToString() ?? "NULL"}");
+                }
+                
                 results.Add(row);
             }
         }
