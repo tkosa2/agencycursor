@@ -62,6 +62,7 @@ The system handles both Deaf/Deaf-Blind service requests and enforces a professi
 - ✅ Personalized response URLs unique per interpreter
 - ✅ Development mode email redirection (prevents test emails to real addresses)
 - ✅ HTML email templates with request details and CTA buttons
+- ✅ Email logging system to track all sent emails with status and error handling
 
 #### 5. Response Tracking
 - ✅ Interpreter response system (Yes/No/Maybe status with notes)
@@ -170,6 +171,19 @@ Billing records for completed or cancelled appointments.
 - Status (Pending, Paid)
 - Created Date
 - Paid Date
+
+---
+
+### 7. **Interpreter Email Logs**
+Audit trail tracking all emails sent to interpreters for broadcast requests.
+
+**Fields:**
+- Email Log ID
+- Request ID
+- Interpreter ID
+- Sent At (timestamp)
+- Status (Success, Failed)
+- Error Message (if failed)
 
 ---
 
@@ -436,6 +450,15 @@ Similar structure to public form but:
 - ✅ Auto-populate requestor fields from search results
 - ✅ Quick access to repeat requestors
 
+### 9. Email Logging & Audit Trail
+- ✅ Complete audit trail of all emails sent to interpreters
+- ✅ Tracks success/failure status for each email
+- ✅ Records error messages if email delivery fails
+- ✅ Admin page at `/EmailLogs` to view all sent emails
+- ✅ Filter capabilities by status and request ID
+- ✅ Email logs displayed in Request Details page (when broadcasted)
+- ✅ Direct links from logs to associated requests
+
 ---
 
 ## Status Reference
@@ -544,6 +567,7 @@ All E2E tests use Playwright browser automation with xUnit framework.
 - Requests
 - Appointments
 - InterpreterResponses
+- InterpreterEmailLogs (tracks all emails sent to interpreters)
 - Invoices
 - ZipCodes (reference data for form validation)
 
