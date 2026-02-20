@@ -23,6 +23,7 @@ public class DetailsModel : PageModel
     public IList<Interpreter> Interpreters { get; set; } = new List<Interpreter>();
     public IList<InterpreterResponse> InterpreterResponses { get; set; } = new List<InterpreterResponse>();
     public Dictionary<int, InterpreterResponse?> ResponsesByInterpreterId { get; set; } = new Dictionary<int, InterpreterResponse?>();
+    public IList<InterpreterEmailLog> EmailLogs { get; set; } = new List<InterpreterEmailLog>();
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
@@ -41,6 +42,9 @@ public class DetailsModel : PageModel
 
         // Load responses for the interpreters
         await LoadInterpreterResponsesAsync(id.Value);
+
+        // Load email logs for this request
+        await LoadEmailLogsAsync(id.Value);
         
         return Page();
     }
@@ -84,6 +88,15 @@ public class DetailsModel : PageModel
             .ToDictionary(g => g.Key, g => g.FirstOrDefault());
     }
 
+    private async Task LoadEmailLogsAsync(int requestId)
+    {
+        EmailLogs = await _db.InterpreterEmailLogs
+            .Where(el => el.RequestId == requestId)
+            .Include(el => el.Interpreter)
+            .OrderByDescending(el => el.SentAt)
+            .ToListAsync();
+    }
+
     public async Task<IActionResult> OnPostNotifyInterpretersAsync(int requestId, int[]? selectedInterpreterIds, string? customMessage)
     {
         Request = await _db.Requests.FirstOrDefaultAsync(r => r.Id == requestId);
@@ -116,7 +129,9 @@ public class DetailsModel : PageModel
                 var personalizedEmail = BuildNotificationEmail(customMessage, interpreter.Id);
                 await _emailService.SendEmailAsync(interpreter.Email,
                     $"New Interpretation Request Available - #{Request.Id}",
-                    personalizedEmail);
+                    personalizedEmail,
+                    requestId: Request.Id,
+                    interpreterId: interpreter.Id);
             }
 
             // Update request status to "Broadcasted"

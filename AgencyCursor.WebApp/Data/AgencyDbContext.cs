@@ -15,6 +15,7 @@ public class AgencyDbContext : DbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<ZipCode> ZipCodes => Set<ZipCode>();
     public DbSet<InterpreterResponse> InterpreterResponses => Set<InterpreterResponse>();
+    public DbSet<InterpreterEmailLog> InterpreterEmailLogs => Set<InterpreterEmailLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

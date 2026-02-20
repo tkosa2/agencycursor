@@ -1,0 +1,91 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Email Logs";
+}
+
+<h1>Email Logs</h1>
+<p>Track all emails sent to interpreters for broadcast requests.</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    <option value="Success" selected="@(Model.FilterStatus == "Success")">Success</option>
+                    <option value="Failed" selected="@(Model.FilterStatus == "Failed")">Failed</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="requestId" class="form-label">Filter by Request ID</label>
+                <input type="number" id="requestId" name="requestId" class="form-control" 
+                       placeholder="Leave blank for all" value="@(Model.FilterRequestId > 0 ? Model.FilterRequestId : "")">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="./Index" class="btn btn-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.EmailLogs.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Request ID</th>
+                    <th>Interpreter</th>
+                    <th>Status</th>
+                    <th>Sent At</th>
+                    <th>Error Message</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model.EmailLogs)
+                {
+                    <tr>
+                        <td>
+                            <a href="/Requests/Details?id=@log.RequestId">#@log.RequestId</a>
+                        </td>
+                        <td>
+                            @log.Interpreter?.Name
+                        </td>
+                        <td>
+                            @if (log.Status == "Success")
+                            {
+                                <span class="badge bg-success">Success</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Failed</span>
+                            }
+                        </td>
+                        <td>@log.SentAt.ToString("g")</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(log.ErrorMessage))
+                            {
+                                <small class="text-danger">@log.ErrorMessage</small>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            <a href="/Requests/Details?id=@log.RequestId" class="btn btn-sm btn-outline-primary">View Request</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">No email logs found matching your filters.</div>
+}

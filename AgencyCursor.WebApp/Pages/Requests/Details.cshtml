@@ -222,7 +222,63 @@ else
             <strong>Waiting for responses...</strong> This request has been broadcasted but no interpreters have responded yet.
         </div>
     }
+
+    <hr class="my-5" />
+
+    <!-- Email Logs Section -->
+    <h2>Email Logs</h2>
+    @if (Model.EmailLogs.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>Interpreter</th>
+                            <th>Status</th>
+                            <th>Sent At</th>
+                            <th>Error Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.EmailLogs)
+                        {
+                            <tr>
+                                <td>@log.Interpreter?.Name</td>
+                                <td>
+                                    @if (log.Status == "Success")
+                                    {
+                                        <span class="badge bg-success">Sent</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </td>
+                                <td><small class="text-muted">@log.SentAt.ToString("g")</small></td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(log.ErrorMessage))
+                                    {
+                                        <small class="text-danger">@log.ErrorMessage</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">—</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-secondary">No emails have been sent for this request yet.</div>
+    }
 }
+
 <!-- Notify Interpreters Modal -->
 <div class="modal fade" id="notifyInterpretersModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
